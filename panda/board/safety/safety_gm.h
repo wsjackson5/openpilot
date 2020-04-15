@@ -149,12 +149,12 @@ static int gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     //}
 
     // exit controls on regen paddle
-    if (addr == 189) {
-      bool regen = GET_BYTE(to_push, 0) & 0x20;
-      if (regen) {
-        controls_allowed = 0;
-      }
-    }
+    //if (addr == 189) {
+    //  bool regen = GET_BYTE(to_push, 0) & 0x20;
+    //  if (regen) {
+    //    controls_allowed = 0;
+    //  }
+    //}
 
     // Check if ASCM or LKA camera are online
     // on powertrain bus.

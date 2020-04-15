@@ -124,7 +124,7 @@ class CarController():
 
     ### GAS/BRAKE ###
 
-    if self.car_fingerprint not in SUPERCRUISE_CARS:
+    if self.car_fingerprint not in SUPERCRUISE_CARS or self.car_fingerprint not in NO_ASCM_CARS:
       # no output if not enabled, but keep sending keepalive messages
       # treat pedals as one
       final_pedal = actuators.gas - actuators.brake
@@ -141,23 +141,22 @@ class CarController():
         apply_gas = int(round(interp(final_pedal, P.GAS_LOOKUP_BP, P.GAS_LOOKUP_V)))
         apply_brake = int(round(interp(final_pedal, P.BRAKE_LOOKUP_BP, P.BRAKE_LOOKUP_V)))
 
-      if not self.car_fingerprint in NO_ASCM_CARS:
-        # Gas/regen and brakes - all at 25Hz
-        if (frame % 4) == 0:
-          idx = (frame // 4) % 4
+      # Gas/regen and brakes - all at 25Hz
+      if (frame % 4) == 0:
+        idx = (frame // 4) % 4
 
-          car_stopping = apply_gas < P.ZERO_GAS
-          standstill = CS.pcm_acc_status == AccState.STANDSTILL
-          at_full_stop = enabled and standstill and car_stopping
-          near_stop = enabled and (CS.v_ego < P.NEAR_STOP_BRAKE_PHASE) and car_stopping
-          can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, canbus.chassis, apply_brake, idx, near_stop, at_full_stop))
+        car_stopping = apply_gas < P.ZERO_GAS
+        standstill = CS.pcm_acc_status == AccState.STANDSTILL
+        at_full_stop = enabled and standstill and car_stopping
+        near_stop = enabled and (CS.v_ego < P.NEAR_STOP_BRAKE_PHASE) and car_stopping
+        can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, canbus.chassis, apply_brake, idx, near_stop, at_full_stop))
 
         # Auto-resume from full stop by resetting ACC control
-          acc_enabled = enabled
-          if standstill and not car_stopping:
-            acc_enabled = False
+        acc_enabled = enabled
+        if standstill and not car_stopping:
+          acc_enabled = False
 
-          can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, canbus.powertrain, apply_gas, idx, acc_enabled, at_full_stop))
+        can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, canbus.powertrain, apply_gas, idx, acc_enabled, at_full_stop))
 
       # Send dashboard UI commands (ACC status), 25hz
       follow_level = CS.get_follow_level()
