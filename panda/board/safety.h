@@ -57,29 +57,6 @@ int safety_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   return current_hooks->fwd(bus_num, to_fwd);
 }
 
-pump_hook message_pump_hook;
-
-void enable_message_pump(uint32_t divider, pump_hook hook) {
-  //Timer for LKAS pump
-  //todo: some kind of locking?
-  message_pump_active = true;
-  message_pump_hook = hook;
-  timer_init(TIM7, divider);
-  NVIC_EnableIRQ(TIM7_IRQn);
-}
-
-void update_message_pump_rate(uint32_t divider) {
-  //TODO: test if this works
-  TIM7->PSC = divider-1;
-}
-
-
-void disable_message_pump() {
-  NVIC_DisableIRQ(TIM7_IRQn);
-  message_pump_hook = NULL;
-  message_pump_active = false;
-}
-
 // Given a CRC-8 poly, generate a static lookup table to use with a fast CRC-8
 // algorithm. Called at init time for safety modes using CRC-8.
 void gen_crc_lookup_table(uint8_t poly, uint8_t crc_lut[]) {
@@ -262,12 +239,6 @@ int set_safety_hooks(uint16_t mode, int16_t param) {
   }
   return set_status;
 }
-
-//Todo: should this be moved to main?
-  if (mode == SAFETY_NOOUTPUT) {
-    puts("Disabling message pump due to SAFETY_NOOUTPUT");
-    disable_message_pump();
-  }
 
 // convert a trimmed integer to signed 32 bit int
 int to_signed(int d, int bits) {
