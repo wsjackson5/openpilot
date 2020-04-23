@@ -675,7 +675,7 @@ void __attribute__ ((noinline)) enable_fpu(void) {
 #define EON_HEARTBEAT_IGNITION_CNT_ON 5U
 #define EON_HEARTBEAT_IGNITION_CNT_OFF 2U
 
-//Message Pump IRQ Handler
+//Message pump IRQ Handler
 void TIM7_IRQHandler(void) {
   if (TIM7->SR != 0) {
     if (message_pump_hook != NULL) {

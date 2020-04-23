@@ -88,6 +88,7 @@ void update_message_pump_rate(uint32_t divider) {
   TIM7->PSC = divider-1;
 }
 
+
 void disable_message_pump() {
   NVIC_DisableIRQ(TIM7_IRQn);
   message_pump_hook = NULL;
@@ -259,9 +260,9 @@ int set_safety_hooks(uint16_t mode, int16_t param) {
   if ((set_status == 0) && (current_hooks->init != NULL)) {
     current_hooks->init(param);
   }
-  //TODO: maybe this belongs in main?
+  //Todo: should this be moved to main?
   if (mode == SAFETY_NOOUTPUT) {
-    //puts("Disabling message pump due to SAFETY_NOOUTPUT");
+    puts("Disabling message pump due to SAFETY_NOOUTPUT");
     disable_message_pump();
   }
   return set_status;

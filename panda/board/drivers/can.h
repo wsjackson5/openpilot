@@ -167,7 +167,7 @@ void can_init_all(void) {
   for (uint8_t i=0U; i < CAN_MAX; i++) {
     ret &= can_init(i);
   }
-  UNUSED(ret);
+  current_board->enable_can_transcievers(true);
 }
 
 void can_flip_buses(uint8_t bus1, uint8_t bus2){
