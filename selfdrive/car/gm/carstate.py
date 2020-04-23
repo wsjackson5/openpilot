@@ -14,7 +14,7 @@ class CarState(CarStateBase):
     super().__init__(CP)
     can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = can_define.dv["ECMPRDNL"]["PRNDL"]
-
+      
     self.prev_distance_button = 0
     self.prev_lka_button = 0
     self.lka_button = 0
@@ -39,7 +39,7 @@ class CarState(CarStateBase):
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     ret.standstill = ret.vEgoRaw < 0.01
-
+    
     self.angle_steers = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
     self.gear_shifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
     self.user_brake = pt_cp.vl["EBCMBrakePedalPosition"]['BrakePedalPosition']
@@ -73,7 +73,7 @@ class CarState(CarStateBase):
     self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
 
     regen_pressed = False
-    if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
+    if self.car_fingerprint == CAR.VOLT:
       regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
 
     # Regen braking is braking
@@ -124,7 +124,7 @@ class CarState(CarStateBase):
       ("DistanceButton", "ASCMSteeringButton", 0),
     ]
 
-    if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
+    if CP.carFingerprint == CAR.VOLT:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
       ]
