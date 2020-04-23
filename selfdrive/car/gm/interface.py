@@ -25,8 +25,8 @@ class CarInterface(CarInterfaceBase):
     return float(accel) / 4.8 - creep_brake
 
   @staticmethod
-  
-  
+
+
   def calc_accel_override(a_ego, a_target, v_ego, v_target):
 
     # normalized max accel. Allowing max accel at low speed causes speed overshoots
@@ -59,8 +59,8 @@ class CarInterface(CarInterfaceBase):
     return float(max(max_accel, a_target / FOLLOW_AGGRESSION)) * min(speedLimiter, accelLimiter)
 
   @staticmethod
-  
-  
+
+
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
     ret.carName = "gm"
@@ -95,6 +95,20 @@ class CarInterface(CarInterfaceBase):
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12], [0.05]]
       ret.steerRateCost = 0.7
+
+    elif candidate == CAR.BOLT:
+      # initial engage unkown - copied from Volt. Stop and go unknown.
+      ret.minEnableSpeed = 8 * CV.MPH_TO_MS
+      ret.mass = 1616. + STD_CARGO_KG
+      ret.safetyModel = car.CarParams.SafetyModel.gm
+      ret.wheelbase = 2.60096
+      ret.steerRatio = 15.0  #Bolt EV has a 16.8 in the spec, but with this value I can see oversteer at sharp corner during openpilot engage.
+      ret.steerRatioRear = 0.
+      ret.centerToFront = ret.wheelbase * 0.4 # wild guess
+      #PID tunning not to prevent oversteer
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.123], [0.0116]]
+      ret.lateralTuning.pid.kf = 0.000043
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -166,61 +180,32 @@ class CarInterface(CarInterfaceBase):
 
     ret = self.CS.update(self.cp)
 
-    '''
-    # brake pedal
-    ret.brake = self.CS.user_brake / 0xd0
-    ret.brakePressed = self.CS.brake_pressed
-    ret.brakeLights = self.CS.frictionBrakesActive
-    
     # cruise state
-    ret.cruiseState.available = bool(self.CS.main_on)
-    '''
-    cruiseEnabled = self.CS.pcm_acc_status != AccState.OFF
-    ret.cruiseState.enabled = cruiseEnabled
-    '''
+    ret.cruiseState.available = self.CS.main_on
+    ret.cruiseState.enabled = self.CS.main_on
     ret.cruiseState.standstill = False
-    '''
+
     ret.readdistancelines = self.CS.follow_level
-    
+
     ret.canValid = self.cp.can_valid
     ret.yawRate = self.VM.yaw_rate(ret.steeringAngle * CV.DEG_TO_RAD, ret.vEgo)
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
-
-    buttonEvents = []
-
-    if self.CS.cruise_buttons != self.CS.prev_cruise_buttons and self.CS.prev_cruise_buttons != CruiseButtons.INIT:
-      be = car.CarState.ButtonEvent.new_message()
-      be.type = ButtonType.unknown
-      if self.CS.cruise_buttons != CruiseButtons.UNPRESS:
-        be.pressed = True
-        but = self.CS.cruise_buttons
-      else:
-        be.pressed = False
-        but = self.CS.prev_cruise_buttons
-      if but == CruiseButtons.RES_ACCEL:
-        if not (ret.cruiseState.enabled and ret.standstill):
-          be.type = ButtonType.accelCruise # Suppress resume button if we're resuming from stop so we don't adjust speed.
-      elif but == CruiseButtons.DECEL_SET:
-        if not cruiseEnabled and not self.CS.lkMode:
-          self.lkMode = True
-        be.type = ButtonType.decelCruise
-      elif but == CruiseButtons.CANCEL:
-        be.type = ButtonType.cancel
-      elif but == CruiseButtons.MAIN:
-        be.type = ButtonType.altButton3
-      buttonEvents.append(be)
-
-    ret.buttonEvents = buttonEvents
-    
-    if cruiseEnabled and self.CS.lka_button and self.CS.lka_button != self.CS.prev_lka_button:
-      self.CS.lkMode = not self.CS.lkMode
 
     if self.CS.distance_button and self.CS.distance_button != self.CS.prev_distance_button:
        self.CS.follow_level -= 1
        if self.CS.follow_level < 1:
          self.CS.follow_level = 3
 
-    events = self.create_common_events(ret, pcm_enable=False)
+    events = self.create_common_events(ret)
+
+    #events = []
+    if not ret.cruiseState.available:
+      events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
+      
+    if ret.cruiseState.enabled and not self.CS.cruise_enable_prev:
+      events.append(create_event('pcmEnable', [ET.ENABLE]))
+    elif not ret.cruiseState.enabled:
+      events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
 
     if ret.vEgo < self.CP.minEnableSpeed:
       events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
@@ -228,19 +213,10 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
     if ret.cruiseState.standstill:
       events.append(create_event('resumeRequired', [ET.WARNING]))
-    if self.CS.pcm_acc_status == AccState.FAULTED:
-      events.append(create_event('controlsFailed', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
-
-    # handle button presses
-    for b in ret.buttonEvents:
-      # do enable on both accel and decel buttons
-      if b.type in [ButtonType.accelCruise, ButtonType.decelCruise] and not b.pressed:
-        events.append(create_event('buttonEnable', [ET.ENABLE]))
-      # do disable on button down
-      if b.type == ButtonType.cancel and b.pressed:
-        events.append(create_event('buttonCancel', [ET.USER_DISABLE]))
 
     ret.events = events
+
+    self.CS.cruise_enable_prev = ret.cruiseState.enabled
 
     # copy back carState packet to CS
     self.CS.out = ret.as_reader()
@@ -254,7 +230,7 @@ class CarInterface(CarInterfaceBase):
 
     # For Openpilot, "enabled" includes pre-enable.
     # In GM, PCM faults out if ACC command overlaps user gas.
-    enabled = c.enabled and not self.CS.out.gasPressed
+    enabled = c.enabled
 
     can_sends = self.CC.update(enabled, self.CS, self.frame, \
                                c.actuators,

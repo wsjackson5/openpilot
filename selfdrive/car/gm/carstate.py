@@ -14,13 +14,14 @@ class CarState(CarStateBase):
     super().__init__(CP)
     can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = can_define.dv["ECMPRDNL"]["PRNDL"]
-      
+
     self.prev_distance_button = 0
     self.prev_lka_button = 0
     self.lka_button = 0
     self.distance_button = 0
     self.follow_level = 3
     self.lkMode = True
+    self.cruise_enable_prev = False
 
   def update(self, pt_cp):
     ret = car.CarState.new_message()
@@ -39,7 +40,7 @@ class CarState(CarStateBase):
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
     ret.standstill = ret.vEgoRaw < 0.01
-    
+
     self.angle_steers = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
     self.gear_shifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
     self.user_brake = pt_cp.vl["EBCMBrakePedalPosition"]['BrakePedalPosition']
@@ -68,16 +69,18 @@ class CarState(CarStateBase):
     ret.rightBlinker = pt_cp.vl["BCMTurnSignals"]['TurnSignals'] == 2
 
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
-    ret.cruiseState.available = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    #ret.cruiseState.available = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    ret.cruiseState.available = self.main_on
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
 
     regen_pressed = False
-    if self.car_fingerprint == CAR.VOLT:
+    if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
       regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
 
     # Regen braking is braking
-    ret.brakePressed = ret.brake > 1e-5 or regen_pressed
+    ret.brakePressed = ret.brake > 1e-5
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
     ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
 
@@ -124,7 +127,7 @@ class CarState(CarStateBase):
       ("DistanceButton", "ASCMSteeringButton", 0),
     ]
 
-    if CP.carFingerprint == CAR.VOLT:
+    if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
       ]
