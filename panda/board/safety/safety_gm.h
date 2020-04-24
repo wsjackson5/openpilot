@@ -50,9 +50,12 @@ int gm_desired_torque_last = 0;
 uint32_t gm_ts_last = 0;
 struct sample_t gm_torque_driver;         // last few driver torques measured
 static void gm_init_lkas_pump(void);
+
 volatile gm_dual_buffer gm_lkas_buffer;
+
 volatile bool gm_ffc_detected = false;
 
+//Copy the stock or OP buffer into the currrent buffer
 static void gm_apply_buffer(volatile gm_dual_buffer *buffer, bool stock) {
   if (stock) {
     buffer->current_frame.RIR = buffer->stock_frame.RIR | 1;
@@ -69,6 +72,7 @@ static void gm_apply_buffer(volatile gm_dual_buffer *buffer, bool stock) {
   }
 }
 
+//Populate the stock lkas - called by fwd hook
 static void gm_set_stock_lkas(CAN_FIFOMailBox_TypeDef *to_send) {
   gm_lkas_buffer.stock_frame.RIR = to_send->RIR;
   gm_lkas_buffer.stock_frame.RDTR = to_send->RDTR;
@@ -77,6 +81,7 @@ static void gm_set_stock_lkas(CAN_FIFOMailBox_TypeDef *to_send) {
   gm_lkas_buffer.stock_ts = TIM2->CNT;
 }
 
+//Populate the OP lkas - called by tx hook
 static void gm_set_op_lkas(CAN_FIFOMailBox_TypeDef *to_send) {
   gm_lkas_buffer.op_frame.RIR = to_send->RIR;
   gm_lkas_buffer.op_frame.RDTR = to_send->RDTR;
@@ -208,11 +213,12 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   // LKA STEER: safety check
   if (addr == 384) {
+    //precalculated inactive zero values to be sent when there is a violation or inactivation
     uint32_t vals[4];
-      vals[0] = 0x00000000U;
-      vals[1] = 0x10000fffU;
-      vals[2] = 0x20000ffeU;
-      vals[3] = 0x30000ffdU;
+    vals[0] = 0x00000000U;
+    vals[1] = 0x10000fffU;
+    vals[2] = 0x20000ffeU;
+    vals[3] = 0x30000ffdU;
 
     int rolling_counter = GET_BYTE(to_send, 0) >> 4;
     int desired_torque = ((GET_BYTE(to_send, 0) & 0x7U) << 8) + GET_BYTE(to_send, 1);
@@ -260,10 +266,9 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
       //Replace payload with appropriate zero value for expected rolling counter
       to_send->RDLR = vals[rolling_counter];
     }
-	    //LKAS messages are placed in a buffer rather than sent
-    tx = 0;
-    gm_set_op_lkas(to_send);
-    gm_init_lkas_pump();
+    tx = 0; //we never tx LKAS - it is buffered
+    gm_set_op_lkas(to_send); //apply the OP LKAS to the buffer
+    gm_init_lkas_pump(); //ensure the message pump is active
   }
 
   // GAS/REGEN: safety check
@@ -294,6 +299,32 @@ static int gm_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
   if (bus_num == 1) {
     int addr = GET_ADDR(to_fwd);
     if (addr != 384) return 0;
+    gm_set_stock_lkas(to_fwd);
+    gm_ffc_detected = true;
+    gm_init_lkas_pump();
+  }
+
+  // fallback to do not forward
+  return bus_fwd;
+}
+
+
+static int gm_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
+  int bus_fwd = -1;
+  if (bus_num == 0) {
+    if (gm_ffc_detected) {
+      //only perform forwarding if we have seen LKAS messages on CAN2
+      bus_fwd = 1;  // Camera is on CAN2
+    }
+  }
+  if (bus_num == 1) {
+    int addr = GET_ADDR(to_fwd);
+    if (addr != 384) {
+      //only perform forwarding if we have seen LKAS messages on CAN2
+      if (gm_ffc_detected) {
+        return 0;
+      }
+    }
     gm_set_stock_lkas(to_fwd);
     gm_ffc_detected = true;
     gm_init_lkas_pump();
@@ -355,8 +386,6 @@ static CAN_FIFOMailBox_TypeDef * gm_pump_hook(void) {
   //update the rolling counter
   gm_lkas_buffer.current_frame.RDLR = (0xFFFFFFCF & gm_lkas_buffer.current_frame.RDLR) | (gm_lkas_buffer.rolling_counter << 4);
 
-  // Recalculate checksum - Thanks Andrew C
-  // Recalculate checksum - Thanks Andrew C
   // Recalculate checksum - Thanks Andrew C
 
   // Replacement rolling counter
