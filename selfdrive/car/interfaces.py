@@ -99,7 +99,7 @@ class CarInterfaceBase():
       events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
 
     # Also disable on brake when speed > 0.
-    if cs_out.brakePressed and (not self.CS.out.brakePressed or not cs_out.standstill):
+    if cs_out.brakePressed and (not self.CS.out.brakePressed or not cs_out.standstill)):
       events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
     return events
