@@ -1,4 +1,4 @@
-<b>This custom fork is for the Bolt EV only. Not tested yet.</b>
+<b>This custom fork is only working on the Bolt EV.</b>
 
 ** Note that Honda stock AEB is disabled in 0.7.5 because of occassional issues on double lane curved highways where stock AEB activates when oncoming car detected - in 0.7.4 Honda stock AEB is enabled because unsafe mode in panda was not available yet in devel**
 
