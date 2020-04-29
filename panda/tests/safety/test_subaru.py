@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from panda import Panda
 from panda.tests.safety import libpandasafety_py
-from panda.tests.safety.common import StdTest, make_msg, UNSAFE_MODE
+from panda.tests.safety.common import test_relay_malfunction, make_msg, test_manually_enable_controls_allowed, test_spam_can_buses
 
 MAX_RATE_UP = 50
 MAX_RATE_DOWN = 70
@@ -14,8 +14,6 @@ RT_INTERVAL = 250000
 
 DRIVER_TORQUE_ALLOWANCE = 60;
 DRIVER_TORQUE_FACTOR = 10;
-
-SPEED_THRESHOLD = 20  # 1kph (see dbc file)
 
 TX_MSGS = [[0x122, 0], [0x221, 0], [0x322, 0]]
 TX_L_MSGS = [[0x164, 0], [0x221, 0], [0x322, 0]]
@@ -46,8 +44,6 @@ class TestSubaruSafety(unittest.TestCase):
   cnt_gas = 0
   cnt_torque_driver = 0
   cnt_cruise = 0
-  cnt_speed = 0
-  cnt_brake = 0
 
   @classmethod
   def setUp(cls):
@@ -71,24 +67,6 @@ class TestSubaruSafety(unittest.TestCase):
       to_send = make_msg(0, 0x371)
       to_send[0].RDLR = (t & 0x7) << 29
       to_send[0].RDHR = (t >> 3) & 0xFF
-    return to_send
-
-  def _speed_msg(self, speed):
-    speed &= 0x1FFF
-    to_send = make_msg(0, 0x13a)
-    to_send[0].RDLR = speed << 12
-    to_send[0].RDHR = speed << 6
-    to_send[0].RDLR |= (self.cnt_speed & 0xF) << 8
-    to_send[0].RDLR |= subaru_checksum(to_send, 0x13a, 8)
-    self.__class__.cnt_speed += 1
-    return to_send
-
-  def _brake_msg(self, brake):
-    to_send = make_msg(0, 0x139)
-    to_send[0].RDHR = (brake << 4) & 0xFFF
-    to_send[0].RDLR |= (self.cnt_brake & 0xF) << 8
-    to_send[0].RDLR |= subaru_checksum(to_send, 0x139, 8)
-    self.__class__.cnt_brake += 1
     return to_send
 
   def _torque_msg(self, torque):
@@ -131,10 +109,10 @@ class TestSubaruSafety(unittest.TestCase):
     self.safety.safety_rx_hook(self._torque_driver_msg(max_t))
 
   def test_spam_can_buses(self):
-    StdTest.test_spam_can_buses(self, TX_MSGS if self.safety.get_subaru_global() else TX_L_MSGS)
+    test_spam_can_buses(self, TX_MSGS if self.safety.get_subaru_global() else TX_L_MSGS)
 
   def test_relay_malfunction(self):
-    StdTest.test_relay_malfunction(self, 0x122 if self.safety.get_subaru_global() else 0x164)
+    test_relay_malfunction(self, 0x122 if self.safety.get_subaru_global() else 0x164)
 
   def test_default_controls_not_allowed(self):
     self.assertFalse(self.safety.get_controls_allowed())
@@ -155,19 +133,6 @@ class TestSubaruSafety(unittest.TestCase):
     self.safety.safety_rx_hook(self._gas_msg(1))
     self.assertFalse(self.safety.get_controls_allowed())
 
-  def test_unsafe_mode_no_disengage_on_gas(self):
-    self.safety.safety_rx_hook(self._gas_msg(0))
-    self.safety.set_controls_allowed(True)
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DISABLE_DISENGAGE_ON_GAS)
-    self.safety.safety_rx_hook(self._gas_msg(1))
-    self.assertTrue(self.safety.get_controls_allowed())
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DEFAULT)
-
-  def test_brake_disengage(self):
-    if (self.safety.get_subaru_global()):
-      StdTest.test_allow_brake_at_zero_speed(self)
-      StdTest.test_not_allow_brake_when_moving(self, SPEED_THRESHOLD)
-
   def test_steer_safety_check(self):
     for enabled in [0, 1]:
       for t in range(-3000, 3000):
@@ -179,7 +144,7 @@ class TestSubaruSafety(unittest.TestCase):
           self.assertTrue(self.safety.safety_tx_hook(self._torque_msg(t)))
 
   def test_manually_enable_controls_allowed(self):
-    StdTest.test_manually_enable_controls_allowed(self)
+    test_manually_enable_controls_allowed(self)
 
   def test_non_realtime_limit_up(self):
     self._set_torque_driver(0, 0)

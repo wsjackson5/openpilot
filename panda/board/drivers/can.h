@@ -28,7 +28,6 @@ void can_set_forwarding(int from, int to);
 
 void can_init(uint8_t can_number);
 void can_init_all(void);
-bool can_tx_check_min_slots_free(uint32_t min);
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook);
 bool can_pop(can_ring *q, CAN_FIFOMailBox_TypeDef *elem);
 
@@ -105,20 +104,6 @@ bool can_push(can_ring *q, CAN_FIFOMailBox_TypeDef *elem) {
       puts("can_push failed!\n");
     #endif
   }
-  return ret;
-}
-
-uint32_t can_slots_empty(can_ring *q) {
-  uint32_t ret = 0;
-
-  ENTER_CRITICAL();
-  if (q->w_ptr >= q->r_ptr) {
-    ret = q->fifo_size - 1U - q->w_ptr + q->r_ptr;
-  } else {
-    ret = q->r_ptr - q->w_ptr - 1U;
-  }
-  EXIT_CRITICAL();
-
   return ret;
 }
 
@@ -332,10 +317,6 @@ void process_can(uint8_t can_number) {
         CAN->sTxMailBox[0].TDHR = to_send.RDHR;
         CAN->sTxMailBox[0].TDTR = to_send.RDTR;
         CAN->sTxMailBox[0].TIR = to_send.RIR;
-
-        if (can_tx_check_min_slots_free(MAX_CAN_MSGS_PER_BULK_TRANSFER)) {
-          usb_outep3_resume_if_paused();
-        }
       }
     }
 
@@ -424,12 +405,23 @@ void CAN3_TX_IRQ_Handler(void) { process_can(2); }
 void CAN3_RX0_IRQ_Handler(void) { can_rx(2); }
 void CAN3_SCE_IRQ_Handler(void) { can_sce(CAN3); }
 
-bool can_tx_check_min_slots_free(uint32_t min) {
-  return
-    (can_slots_empty(&can_tx1_q) >= min) &&
-    (can_slots_empty(&can_tx2_q) >= min) &&
-    (can_slots_empty(&can_tx3_q) >= min) &&
-    (can_slots_empty(&can_txgmlan_q) >= min);
+void pump_send(pump_hook hook) {
+  uint8_t bus_number = 0U;
+  if (hook == NULL) return;
+  CAN_FIFOMailBox_TypeDef *to_push = hook();
+  if (to_push != NULL) {
+    if (bus_number < BUS_MAX) {
+      // add CAN packet to send queuesend
+      // bus number isn't passed through
+      to_push->RDTR &= 0xF;
+      if ((bus_number == 3U) && (can_num_lookup[3] == 0xFFU)) {
+        gmlan_send_errs += bitbang_gmlan(to_push) ? 0U : 1U;
+      } else {
+        can_fwd_errs += can_push(can_queues[bus_number], to_push) ? 0U : 1U;
+        process_can(CAN_NUM_FROM_BUS_NUM(bus_number));
+      }
+    }
+  }
 }
 
 void can_send(CAN_FIFOMailBox_TypeDef *to_push, uint8_t bus_number, bool skip_tx_hook) {

@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from panda import Panda
 from panda.tests.safety import libpandasafety_py
-from panda.tests.safety.common import StdTest, make_msg, UNSAFE_MODE
+from panda.tests.safety.common import test_relay_malfunction, make_msg, test_manually_enable_controls_allowed, test_spam_can_buses
 
 MAX_RATE_UP = 10
 MAX_RATE_DOWN = 25
@@ -12,13 +12,8 @@ MAX_TORQUE = 1500
 MAX_ACCEL = 1500
 MIN_ACCEL = -3000
 
-ISO_MAX_ACCEL = 2000
-ISO_MIN_ACCEL = -3500
-
 MAX_RT_DELTA = 375
 RT_INTERVAL = 250000
-
-STANDSTILL_THRESHOLD = 100  # 1kph
 
 MAX_TORQUE_ERROR = 350
 INTERCEPTOR_THRESHOLD = 475
@@ -67,7 +62,7 @@ class TestToyotaSafety(unittest.TestCase):
     t = twos_comp(torque, 16)
     to_send = make_msg(0, 0x260)
     to_send[0].RDHR = (t & 0xff00) | ((t & 0xFF) << 16)
-    to_send[0].RDHR |= toyota_checksum(to_send[0], 0x260, 8) << 24
+    to_send[0].RDHR = to_send[0].RDHR | (toyota_checksum(to_send[0], 0x260, 8) << 24)
     return to_send
 
   def _torque_msg(self, torque):
@@ -82,25 +77,9 @@ class TestToyotaSafety(unittest.TestCase):
     to_send[0].RDLR = (a & 0xFF) << 8 | (a >> 8)
     return to_send
 
-  def _speed_msg(self, s):
-    offset = (0x6f << 8) + 0x1a  # there is a 0x1a6f offset in the signal
-    to_send = make_msg(0, 0xaa)
-    to_send[0].RDLR = ((s & 0xFF) << 8 | (s >> 8)) + offset
-    to_send[0].RDLR += ((s & 0xFF) << 24 | ((s >> 8) << 16)) + (offset << 16)
-    to_send[0].RDHR = ((s & 0xFF) << 8 | (s >> 8)) + offset
-    to_send[0].RDHR += ((s & 0xFF) << 24 | ((s >> 8) << 16)) + (offset << 16)
-    return to_send
-
-  def _brake_msg(self, brake):
-    to_send = make_msg(0, 0x226)
-    to_send[0].RDHR = brake << 5
-    to_send[0].RDHR |= toyota_checksum(to_send[0], 0x226, 8) << 24
-    return to_send
-
-  def _gas_pressed_msg(self, pressed, enable_cruise=False):
-    to_send = make_msg(0, 0x1D2)
-    to_send[0].RDLR = ((1*(not pressed)) << 4) | (1*enable_cruise << 5)
-    to_send[0].RDHR = (toyota_checksum(to_send[0], 0x1D2, 8) << 24)
+  def _send_gas_msg(self, gas):
+    to_send = make_msg(0, 0x2C1)
+    to_send[0].RDHR = (gas & 0xFF) << 16
     return to_send
 
   def _send_interceptor_msg(self, gas, addr):
@@ -117,16 +96,16 @@ class TestToyotaSafety(unittest.TestCase):
     return to_send
 
   def test_spam_can_buses(self):
-    StdTest.test_spam_can_buses(self, TX_MSGS)
+    test_spam_can_buses(self, TX_MSGS)
 
   def test_relay_malfunction(self):
-    StdTest.test_relay_malfunction(self, 0x2E4)
+    test_relay_malfunction(self, 0x2E4)
 
   def test_default_controls_not_allowed(self):
     self.assertFalse(self.safety.get_controls_allowed())
 
   def test_manually_enable_controls_allowed(self):
-    StdTest.test_manually_enable_controls_allowed(self)
+    test_manually_enable_controls_allowed(self)
 
   def test_enable_control_allowed_from_cruise(self):
     self.safety.safety_rx_hook(self._pcm_cruise_msg(False))
@@ -140,9 +119,9 @@ class TestToyotaSafety(unittest.TestCase):
     self.assertFalse(self.safety.get_controls_allowed())
 
   def test_prev_gas(self):
-    for pressed in [True, False]:
-      self.safety.safety_rx_hook(self._gas_pressed_msg(pressed))
-      self.assertEqual(pressed, self.safety.get_gas_pressed_prev())
+    for g in range(0, 256):
+      self.safety.safety_rx_hook(self._send_gas_msg(g))
+      self.assertEqual(g, self.safety.get_toyota_gas_prev())
 
   def test_prev_gas_interceptor(self):
     self.safety.safety_rx_hook(self._send_interceptor_msg(0x0, 0x201))
@@ -153,27 +132,18 @@ class TestToyotaSafety(unittest.TestCase):
     self.safety.set_gas_interceptor_detected(False)
 
   def test_disengage_on_gas(self):
-    self.safety.safety_rx_hook(self._gas_pressed_msg(False))
+    self.safety.safety_rx_hook(self._send_gas_msg(0))
     self.safety.set_controls_allowed(True)
-    self.safety.safety_rx_hook(self._gas_pressed_msg(True, enable_cruise=True))
+    self.safety.safety_rx_hook(self._send_gas_msg(1))
     self.assertFalse(self.safety.get_controls_allowed())
 
-  def test_unsafe_mode_no_disengage_on_gas(self):
-    self.safety.safety_rx_hook(self._gas_pressed_msg(False))
-    self.safety.set_controls_allowed(True)
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DISABLE_DISENGAGE_ON_GAS)
-    self.safety.safety_rx_hook(self._gas_pressed_msg(True, enable_cruise=True))
-    self.assertTrue(self.safety.get_controls_allowed())
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DEFAULT)
-
   def test_allow_engage_with_gas_pressed(self):
-    self.safety.safety_rx_hook(self._gas_pressed_msg(True))
+    self.safety.safety_rx_hook(self._send_gas_msg(1))
     self.safety.set_controls_allowed(True)
-    for _ in range(2):
-      # since cruise msg is used for gas pedal state, cruise bit must
-      # also be set for this test or else it will set controls_allowed
-      self.safety.safety_rx_hook(self._gas_pressed_msg(True, enable_cruise=True))
-      self.assertTrue(self.safety.get_controls_allowed())
+    self.safety.safety_rx_hook(self._send_gas_msg(1))
+    self.assertTrue(self.safety.get_controls_allowed())
+    self.safety.safety_rx_hook(self._send_gas_msg(1))
+    self.assertTrue(self.safety.get_controls_allowed())
 
   def test_disengage_on_gas_interceptor(self):
     for g in range(0, 0x1000):
@@ -184,21 +154,6 @@ class TestToyotaSafety(unittest.TestCase):
       self.assertEqual(remain_enabled, self.safety.get_controls_allowed())
       self.safety.safety_rx_hook(self._send_interceptor_msg(0, 0x201))
       self.safety.set_gas_interceptor_detected(False)
-
-  def test_unsafe_mode_no_disengage_on_gas_interceptor(self):
-    self.safety.set_controls_allowed(True)
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DISABLE_DISENGAGE_ON_GAS)
-    for g in range(0, 0x1000):
-      self.safety.safety_rx_hook(self._send_interceptor_msg(g, 0x201))
-      self.assertTrue(self.safety.get_controls_allowed())
-      self.safety.safety_rx_hook(self._send_interceptor_msg(0, 0x201))
-      self.safety.set_gas_interceptor_detected(False)
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DEFAULT)
-    self.safety.set_controls_allowed(False)
-
-  def test_brake_disengage(self):
-    StdTest.test_allow_brake_at_zero_speed(self)
-    StdTest.test_not_allow_brake_when_moving(self, STANDSTILL_THRESHOLD)
 
   def test_allow_engage_with_gas_interceptor_pressed(self):
     self.safety.safety_rx_hook(self._send_interceptor_msg(0x1000, 0x201))
@@ -217,18 +172,6 @@ class TestToyotaSafety(unittest.TestCase):
         else:
           send = accel == 0
         self.assertEqual(send, self.safety.safety_tx_hook(self._accel_msg(accel)))
-
-  def test_unsafe_iso_accel_actuation_limits(self):
-    for accel in np.arange(ISO_MIN_ACCEL - 1000, ISO_MAX_ACCEL + 1000, 100):
-      for controls_allowed in [True, False]:
-        self.safety.set_controls_allowed(controls_allowed)
-        self.safety.set_unsafe_mode(UNSAFE_MODE.RAISE_LONGITUDINAL_LIMITS_TO_ISO_MAX)
-        if controls_allowed:
-          send = ISO_MIN_ACCEL <= accel <= ISO_MAX_ACCEL
-        else:
-          send = accel == 0
-        self.assertEqual(send, self.safety.safety_tx_hook(self._accel_msg(accel)))
-    self.safety.set_unsafe_mode(UNSAFE_MODE.DEFAULT)
 
   def test_torque_absolute_limits(self):
     for controls_allowed in [True, False]:
@@ -359,6 +302,7 @@ class TestToyotaSafety(unittest.TestCase):
 
         # assume len 8
         self.assertEqual(fwd_bus, self.safety.safety_fwd_hook(b, make_msg(b, m, 8)))
+
 
 
 if __name__ == "__main__":
