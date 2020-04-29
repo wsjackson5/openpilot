@@ -102,12 +102,12 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1616. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.60096
-      ret.steerRatio = 15.0  #Bolt EV has a 16.8 in the spec, but with this value I can see oversteer at sharp corner during openpilot engage.
+      ret.steerRatio = 12.0
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
       #PID tunning not to prevent oversteer
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.123], [0.0116]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18], [0.013]]
       ret.lateralTuning.pid.kf = 0.000043
 
     elif candidate == CAR.MALIBU:
@@ -201,7 +201,7 @@ class CarInterface(CarInterfaceBase):
     #events = []
     if not ret.cruiseState.available:
       events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
-      
+
     if ret.cruiseState.enabled and not self.CS.cruise_enable_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
     elif not ret.cruiseState.enabled:
