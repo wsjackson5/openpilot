@@ -6,7 +6,7 @@ from opendbc.can.parser import CANParser
 from selfdrive.car.interfaces import CarStateBase
 from selfdrive.car.gm.values import DBC, CAR, AccState, CanBus, \
                                     CruiseButtons, is_eps_status_ok, \
-                                    STEER_THRESHOLD, SUPERCRUISE_CARS
+                                    STEER_THRESHOLD
 
 
 class CarState(CarStateBase):
@@ -53,24 +53,18 @@ class CarState(CarStateBase):
     ret.leftBlinker = pt_cp.vl["BCMTurnSignals"]['TurnSignals'] == 1
     ret.rightBlinker = pt_cp.vl["BCMTurnSignals"]['TurnSignals'] == 2
 
-    if self.car_fingerprint in SUPERCRUISE_CARS:
-      self.park_brake = False
-      ret.cruiseState.available = False
-      ret.espDisabled = False
-      regen_pressed = False
-      self.pcm_acc_status = int(pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive'])
+    self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
+    self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
+    self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
+    if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
+      regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
     else:
-      self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
-      ret.cruiseState.available = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
-      ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
-      self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
-      if self.car_fingerprint == CAR.VOLT:
-        regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
-      else:
-        regen_pressed = False
+      regen_pressed = False
 
     # Regen braking is braking
-    ret.brakePressed = ret.brake > 1e-5 or regen_pressed
+    ret.brakePressed = ret.brake > 1e-5
+    ret.cruiseState.available = self.main_on
     ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
     ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
 
@@ -105,7 +99,7 @@ class CarState(CarStateBase):
       ("LKATorqueDeliveredStatus", "PSCMStatus", 0),
     ]
 
-    if CP.carFingerprint == CAR.VOLT:
+    if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
       ]
