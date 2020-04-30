@@ -108,7 +108,7 @@ class CarInterface(CarInterfaceBase):
       #PID tunning not to prevent oversteer
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18], [0.013]]
-      ret.lateralTuning.pid.kf = 0.000043
+      ret.lateralTuning.pid.kf = 0.00002
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
