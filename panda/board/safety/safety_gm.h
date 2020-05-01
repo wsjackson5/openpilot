@@ -1,10 +1,8 @@
 // board enforces
 //   in-state
 //      accel set/resume
+//      main sw
 //   out-state
-//      cancel button
-//      regen paddle
-//      accel rising edge
 //      brake rising edge
 //      brake > 0mph
 
@@ -44,7 +42,7 @@ AddrCheckStruct gm_rx_checks[] = {
 const int GM_RX_CHECK_LEN = sizeof(gm_rx_checks) / sizeof(gm_rx_checks[0]);
 
 int gm_brake_prev = 0;
-int gm_gas_prev = 0;
+//int gm_gas_prev = 0;
 bool gm_moving = false;
 int gm_rt_torque_last = 0;
 int gm_desired_torque_last = 0;
@@ -120,10 +118,8 @@ static int gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       switch (button) {
         case 2:  // resume
         case 3:  // set
+        case 5:  // main
           controls_allowed = 1;
-          break;
-        case 6:  // cancel
-          controls_allowed = 0;
           break;
         default:
           break;  // any other button is irrelevant
@@ -143,23 +139,6 @@ static int gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
          controls_allowed = 0;
       }
       gm_brake_prev = brake;
-    }
-
-    // exit controls on rising edge of gas press
-    if (addr == 417) {
-      int gas = GET_BYTE(to_push, 6);
-      if (gas && !gm_gas_prev) {
-        controls_allowed = 0;
-      }
-      gm_gas_prev = gas;
-    }
-
-    // exit controls on regen paddle
-    if (addr == 189) {
-      bool regen = GET_BYTE(to_push, 0) & 0x20;
-      if (regen) {
-        controls_allowed = 0;
-      }
     }
 
     // Check if ASCM or LKA camera are online
@@ -195,8 +174,8 @@ static int gm_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 
   // disallow actuator commands if gas or brake (with vehicle moving) are pressed
   // and the the latching controls_allowed flag is True
-  int pedal_pressed = gm_gas_prev || (gm_brake_prev && gm_moving);
-  bool current_controls_allowed = controls_allowed && !pedal_pressed;
+
+  bool current_controls_allowed = controls_allowed;
 
   // BRAKE: safety check
   if (addr == 789) {
@@ -319,8 +298,8 @@ static int gm_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
 
 
 static CAN_FIFOMailBox_TypeDef * gm_pump_hook(void) {
-  volatile int pedal_pressed = (volatile int)gm_gas_prev || ((volatile int)gm_brake_prev && (volatile int)gm_moving);
-  volatile bool current_controls_allowed = (volatile bool)controls_allowed && !(volatile int)pedal_pressed;
+  //volatile int pedal_pressed = (volatile int)gm_gas_prev || ((volatile int)gm_brake_prev && (volatile int)gm_moving);
+  volatile bool current_controls_allowed = (volatile bool)controls_allowed; //&& !(volatile int)pedal_pressed;
 
   if (!gm_ffc_detected) {
     //If we haven't seen lkas messages from CAN2, there is no passthrough, just use OP
@@ -333,7 +312,7 @@ static CAN_FIFOMailBox_TypeDef * gm_pump_hook(void) {
       gm_lkas_buffer.current_frame.RDHR = 0U;
     }
   }
-  else 
+  else
   {
     if (!current_controls_allowed) {
       if (gm_lkas_buffer.stock_ts == 0) return NULL;
@@ -371,18 +350,18 @@ static CAN_FIFOMailBox_TypeDef * gm_pump_hook(void) {
 
   // Recalculate checksum - Thanks Andrew C
 
-  // Replacement rolling counter 
+  // Replacement rolling counter
   uint32_t newidx = gm_lkas_buffer.rolling_counter;
-  
+
   // Pull out LKA Steering CMD data and swap endianness (not including rolling counter)
   uint32_t dataswap = ((gm_lkas_buffer.current_frame.RDLR << 8) & 0x0F00U) | ((gm_lkas_buffer.current_frame.RDLR >> 8) &0xFFU);
 
   // Compute Checksum
   uint32_t checksum = (0x1000 - dataswap - newidx) & 0x0fff;
-  
+
   //Swap endianness of checksum back to what GM expects
   uint32_t checksumswap = (checksum >> 8) | ((checksum << 8) & 0xFF00U);
-  
+
   // Merge the rewritten checksum back into the BxCAN frame RDLR
   gm_lkas_buffer.current_frame.RDLR &= 0x0000FFFF;
   gm_lkas_buffer.current_frame.RDLR |= (checksumswap << 16);
