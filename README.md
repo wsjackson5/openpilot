@@ -1,3 +1,14 @@
+<b>This custom fork is only working on the Bolt EV</b>
+- Panda code : Jason Jshuler
+- Support single pedal driving (OP engage by curise main on switch "ON")
+- Some lateral control tuning
+   1) Break Point :  0, 60kph, 80kph
+   2) Kp : [0.012, 0.16, 0.2], Ki : [0.007, 0.0125, 0.016]
+   3) Kf : 0.000023, SteerRatio : 16.5
+   <b> Caution : The steering is unstable under 60 kph </b>
+- OP disengage conditioin : Brake or main on switch "OFF"
+
+
 [![](https://i.imgur.com/UelUjKAh.png)](#)
 
 Table of Contents
