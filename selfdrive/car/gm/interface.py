@@ -61,7 +61,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,16.6,22.2], [0.,16.6,22.2]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12,0.16,0.2], [0.005,0.0125,0.018]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12,0.16,0.2], [0.007,0.0125,0.016]]
       ret.lateralTuning.pid.kf = 0.000023
 
     elif candidate == CAR.MALIBU:
