@@ -53,16 +53,17 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate == CAR.BOLT:
       # initial engage unkown - copied from Volt. Stop and go unknown.
-      ret.minEnableSpeed = 1
+      ret.minEnableSpeed = 3
       ret.mass = 1616. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.60096
-      ret.steerRatio = 16.5
+      ret.steerRatio = 16.4
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,16.6,22.2], [0.,16.6,22.2]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12,0.16,0.2], [0.007,0.0125,0.016]]
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,11.0,14.0,18.0,22.0], [0.,11.0,14.0,18.0,22.0]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1,0.12,0.16,0.18,0.2], [0.005,0.007,0.0125,0.014,0.016]]
       ret.lateralTuning.pid.kf = 0.000023
+      tire_stiffness_factor = 1.37  # measured data
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
