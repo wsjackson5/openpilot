@@ -60,10 +60,10 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 16.5
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,11.0,14.0,18.0,22.0,25.0], [0.,11.0,14.0,18.0,22.0,25.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1,0.13,0.16,0.18,0.2,0.22], [0.003,0.005,0.0125,0.014,0.016,0.017]]
+      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,11.0,22.0,27.0], [0.,11.0,22.0,27.0]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1,0.18,0.2,0.22], [0.01,0.014,0.016,0.018]]
       ret.lateralTuning.pid.kf = 0.000023
-      tire_stiffness_factor = 1.0  # measured data
+      tire_stiffness_factor = 0.8  
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
