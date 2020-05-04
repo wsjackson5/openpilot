@@ -2,8 +2,8 @@
 - Panda code : Jason Jshuler
 - Support single pedal driving (OP engage by curise main on switch "ON")
 - Some lateral control tuning (updated)
-  Kf : 0.00002, Ki : 0.013, Kp : 0.18
-  SteerRatio : 12.0, sR_BP0 : 4.0, sR_BP1 : 12.0, sR_time : 1, steerRateCost : 0.5
+  Kf : 0.000023, Ki : 0.005, Kp : 0.13
+  SteerRatio : 12.0, sR_BP0 : 3.0, sR_BP1 : 10.0, sR_time : 1, sR_boost : 4.5, steerRateCost : 0.7
 - OP disengage conditioin : Brake or main on switch "OFF"
 
 ** Note that Honda stock AEB is disabled in 0.7.5 because of occassional issues on double lane curved highways where stock AEB activates when oncoming car detected - in 0.7.4 Honda stock AEB is enabled because unsafe mode in panda was not available yet in devel**
