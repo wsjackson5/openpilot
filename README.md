@@ -2,9 +2,9 @@
 - Panda code : Jason Jshuler
 - Support single pedal driving (OP engage by curise main on switch "ON")
 - Some lateral control tuning
-   1) Break Point :  0, 40, 50, 65, 80, 90kph
-   2) Kp : [0.1,0.13,0.16,0.18,0.2,0.22], Ki : [0.003,0.005,0.0125,0.014,0.016,0.017], Kf : 0.000023
-   3) SteerRatio : 16.5, Tire Stiffness : 1.0 [Not recommend to use Steer Ratio Learner. After you switch the fork with this, please change the value into "LiveParameters" with default]
+   1) Break Point :  0, 25, 40, 80, 97kph
+   2) Kp : [0.05,0.1,0.18,0.2,0.23], Ki : [0.005,0.01,0.014,0.016,0.018], Kf : 0.000023
+   3) SteerRatio : 16.5, Tire Stiffness : 0.8 [Not recommend to use Steer Ratio Learner. After you switch the fork with this, please change the value into "LiveParameters" with default]
    <b> Caution : The steering is unstable under 60 kph </b>
 - OP disengage conditioin : Brake or main on switch "OFF"
 
