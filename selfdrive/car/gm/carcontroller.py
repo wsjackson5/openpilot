@@ -22,7 +22,7 @@ class CarControllerParams():
       self.STEER_MAX = 300
       self.STEER_STEP = 1              # how often we update the steer cmd
       self.STEER_DELTA_UP = 3          # ~0.75s time to peak torque (255/50hz/0.75s)
-      self.STEER_DELTA_DOWN = 7        # ~0.3s from peak torque to zero
+      self.STEER_DELTA_DOWN = 3        # ~0.3s from peak torque to zero
       self.MIN_STEER_SPEED = 3.
 
     self.STEER_DRIVER_ALLOWANCE = 50   # allowed driver torque before start limiting
@@ -73,6 +73,7 @@ class CarController():
     self.pedal_steady = 0.
     self.start_time = 0.
     self.apply_steer_last = 0
+    self.steer_max = 0.
     self.car_fingerprint = CP.carFingerprint
     self.lka_icon_status_last = (False, False)
     self.steer_rate_limited = False
@@ -98,6 +99,16 @@ class CarController():
     if (frame % P.STEER_STEP) == 0:
       lkas_enabled = enabled and not CS.steer_warning and CS.out.vEgo > P.MIN_STEER_SPEED
       if lkas_enabled:
+        if CS.out.vEgo < 7.0:
+          self.steer_max = P.STEER_MAX * 0.7
+        elif CS.out.vEgo < 11.0:
+          self.steer_max = P.STEER_MAX * 0.8
+        elif CS.out.vEgo < 22.0:
+          self.steer_max = P.STEER_MAX * 0.85
+        elif CS.out.vEgo < 27.0:
+          self.steer_max = P.STEER_MAX * 0.9
+        else:
+          self.steer_max = P.STEER_MAX * 1.0
         new_steer = actuators.steer * P.STEER_MAX
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
         self.steer_rate_limited = new_steer != apply_steer
