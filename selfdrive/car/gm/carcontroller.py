@@ -109,7 +109,7 @@ class CarController():
           self.steer_max = P.STEER_MAX * 0.9
         else:
           self.steer_max = P.STEER_MAX * 1.0
-        new_steer = actuators.steer * P.STEER_MAX
+        new_steer = actuators.steer * self.steer_max
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
         self.steer_rate_limited = new_steer != apply_steer
       else:
