@@ -99,9 +99,13 @@ class CarController():
     if (frame % P.STEER_STEP) == 0:
       lkas_enabled = enabled and not CS.steer_warning and CS.out.vEgo > P.MIN_STEER_SPEED
       if lkas_enabled:
-        if CS.out.vEgo < 11.0:
+        if CS.out.vEgo < 7.0:
+          self.steer_max = P.STEER_MAX * 0.7
+        elif CS.out.vEgo < 11.0:
           self.steer_max = P.STEER_MAX * 0.8
         elif CS.out.vEgo < 22.0:
+          self.steer_max = P.STEER_MAX * 0.85
+        elif CS.out.vEgo < 27.0:
           self.steer_max = P.STEER_MAX * 0.9
         else:
           self.steer_max = P.STEER_MAX * 1.0
