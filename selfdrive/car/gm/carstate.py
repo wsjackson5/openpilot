@@ -56,7 +56,7 @@ class CarState(CarStateBase):
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
-    self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
+    self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
     if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
       regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
     else:
@@ -65,8 +65,8 @@ class CarState(CarStateBase):
     # Regen braking is braking
     ret.brakePressed = ret.brake > 1e-5
     ret.cruiseState.available = self.main_on
-    ret.cruiseState.enabled = self.pcm_acc_status != AccState.OFF
-    ret.cruiseState.standstill = self.pcm_acc_status == AccState.STANDSTILL
+    ret.cruiseState.enabled = self.pcm_acc_status != 0
+    ret.cruiseState.standstill = False
 
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]['LKATorqueDeliveredStatus']
@@ -97,22 +97,15 @@ class CarState(CarStateBase):
       ("PRNDL", "ECMPRDNL", 0),
       ("LKADriverAppldTrq", "PSCMStatus", 0),
       ("LKATorqueDeliveredStatus", "PSCMStatus", 0),
+      ("TractionControlOn", "ESPStatus", 0),
+      ("EPBClosed", "EPBStatus", 0),
+      ("CruiseMainOn", "ECMEngineStatus", 0),
+      ("ACCCmdActive", "ASCMActiveCruiseControlStatus", 0),
     ]
 
     if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
-      ]
-    if CP.carFingerprint in SUPERCRUISE_CARS:
-      signals += [
-        ("ACCCmdActive", "ASCMActiveCruiseControlStatus", 0)
-      ]
-    else:
-      signals += [
-        ("TractionControlOn", "ESPStatus", 0),
-        ("EPBClosed", "EPBStatus", 0),
-        ("CruiseMainOn", "ECMEngineStatus", 0),
-        ("CruiseState", "AcceleratorPedal2", 0),
       ]
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], CanBus.POWERTRAIN)
