@@ -63,7 +63,8 @@ class CarState(CarStateBase):
       self.regen_pressed = False
 
     # Regen braking is braking
-    ret.brakePressed = ret.brake > 1e-5 or self.regen_pressed
+    ret.brakePressed = ret.brake > 1e-5 #or self.regen_pressed
+    ret.regenPressed = self.regen_pressed
     ret.cruiseState.available = self.main_on
     ret.cruiseState.enabled = self.pcm_acc_status != 0
     ret.cruiseState.standstill = False

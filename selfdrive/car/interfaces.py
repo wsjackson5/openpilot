@@ -25,6 +25,8 @@ class CarInterfaceBase():
 
     self.frame = 0
     self.brake_pressed_prev = False
+    self.regen_pressed_prev = False
+    self.disabled_by_regen = False
     self.cruise_enabled_prev = False
     self.low_speed_alert = False
 
