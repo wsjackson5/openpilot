@@ -53,7 +53,7 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate == CAR.BOLT:
       # initial engage unkown - copied from Volt. Stop and go unknown.
-      ret.minEnableSpeed = 3
+      ret.minEnableSpeed = -1
       ret.mass = 1616. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.60096
@@ -162,11 +162,19 @@ class CarInterface(CarInterfaceBase):
     if self.CS.park_brake:
       events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
+    if not self.regen_pressed_prev and ret.regenPressed and not self.disabled_by_regen :
+      events.append(create_event('pedalPressed', [ET.NO_ENTRY, ET.USER_DISABLE]))
+      self.disabled_by_regen =True
+    elif not ret.regenPressed and self.regen_pressed_prev and self.disabled_by_regen  :
+      events.append(create_event('pcmEnable', [ET.ENABLE]))
+      self.disabled_by_regen =False
+
     ret.events = events
 
     # update previous brake/gas pressed
     self.cruise_enabled_prev = ret.cruiseState.enabled
     self.brake_pressed_prev = ret.brakePressed
+    self.regen_pressed_prev = ret.regenPressed
 
     # copy back carState packet to CS
     self.CS.out = ret.as_reader()
