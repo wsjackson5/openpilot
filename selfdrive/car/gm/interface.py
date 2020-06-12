@@ -74,9 +74,9 @@ class CarInterface(CarInterfaceBase):
     tire_stiffness_factor = 0.444  # not optimized yet
 
     # Start with a baseline lateral tuning for all GM vehicles. Override tuning as needed in each model section below.
-    ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-    ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
-    ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
+    #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+    #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
+    #ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
     ret.steerRateCost = 1.0
     ret.steerActuatorDelay = 0.2  # Default delay, not measured yet
 
@@ -98,11 +98,24 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 16.5
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,41.0], [0.,41.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1,0.24], [0.01,0.019]]
-      ret.lateralTuning.pid.kf = 0.00004
+      #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,41.0], [0.,41.0]]
+      #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1,0.24], [0.01,0.019]]
+      #ret.lateralTuning.pid.kf = 0.000038
+
+      #-----------------------------------------------------------------------------
+      # INDI
+      #-----------------------------------------------------------------------------
+      # timeconstant is smoothing. Higher values == more smoothing
+      # actuatoreffectiveness is how much it steers. Lower values == more steering
+      # outer and inner are gains. Higher values = more steering
+      #
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGain = 3.6
+      ret.lateralTuning.indi.outerLoopGain = 2.6
+      ret.lateralTuning.indi.timeConstant = 1.0
+      ret.lateralTuning.indi.actuatorEffectiveness = 1.5
+
       tire_stiffness_factor = 1.0
-      ret.steerRateCost = 1
 
     elif candidate == CAR.MALIBU:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -180,7 +193,8 @@ class CarInterface(CarInterfaceBase):
 
     ret.cruiseState.available = self.CS.main_on
     #ret.cruiseState.enabled = self.CS.main_on if not self.CS.regen_pressed else False
-    ret.cruiseState.enabled = self.CS.main_on
+    #ret.cruiseState.enabled = self.CS.main_on
+    ret.cruiseState.enabled = self.CS.pcm_acc_status == 1
 
     buttonEvents = []
 

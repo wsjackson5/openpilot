@@ -6,6 +6,10 @@ from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.gm import gmcan
 from selfdrive.car.gm.values import DBC, CanBus, AccState
 from opendbc.can.packer import CANPacker
+from common.params import Params
+params = Params()
+from common.dp import get_last_modified
+from common.dp import common_controller_update, common_controller_ctrl
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -71,6 +75,14 @@ class CarController():
   def update(self, enabled, CS, frame, actuators, \
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
 
+    if frame % 500 == 0:
+      modified = get_last_modified()
+      if self.dp_last_modified != modified:
+        self.dragon_lat_ctrl, \
+        self.dragon_enable_steering_on_signal, \
+        self.dragon_blinker_off_timer = common_controller_update()
+        self.dp_last_modified = modified
+
     P = self.params
 
     # Send CAN commands.
@@ -103,6 +115,18 @@ class CarController():
 
       self.apply_steer_last = apply_steer
       idx = (frame // P.STEER_STEP) % 4
+
+      blinker_on = CS.out.leftBlinker or CS.out.rightBlinker
+      if not enabled:
+        self.blinker_end_frame = 0
+      if self.last_blinker_on and not blinker_on:
+        self.blinker_end_frame = frame + self.dragon_blinker_off_timer
+      lkas_enabled = common_controller_ctrl(enabled,
+                                         self.dragon_lat_ctrl,
+                                         self.dragon_enable_steering_on_signal,
+                                         blinker_on or frame < self.blinker_end_frame,
+                                         lkas_enabled)
+      self.last_blinker_on = blinker_on
 
       can_sends.append(gmcan.create_steering_control(self.packer_pt,
         CanBus.POWERTRAIN, apply_steer, idx, lkas_enabled))
