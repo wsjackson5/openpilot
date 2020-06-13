@@ -211,8 +211,8 @@ class CarInterface(CarInterfaceBase):
 
     ret.cruiseState.available = self.CS.main_on
     #ret.cruiseState.enabled = self.CS.main_on if not self.CS.regen_pressed else False
-    #ret.cruiseState.enabled = self.CS.main_on
-    ret.cruiseState.enabled = self.CS.pcm_acc_status == 1
+    ret.cruiseState.enabled = self.CS.main_on
+    #ret.cruiseState.enabled = self.CS.pcm_acc_status == 1
 
     buttonEvents = []
 
