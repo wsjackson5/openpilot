@@ -6,10 +6,6 @@ from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.gm import gmcan
 from selfdrive.car.gm.values import DBC, CanBus, AccState
 from opendbc.can.packer import CANPacker
-from common.params import Params
-params = Params()
-from common.dp import get_last_modified
-from common.dp import common_controller_update, common_controller_ctrl
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
@@ -62,7 +58,6 @@ class CarController():
     self.pedal_steady = 0.
     self.start_time = 0.
     self.apply_steer_last = 0
-    self.steer_max = 0.
     self.lka_icon_status_last = (False, False)
     self.steer_rate_limited = False
     self.fcw_frames = 0
@@ -74,14 +69,6 @@ class CarController():
 
   def update(self, enabled, CS, frame, actuators, \
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
-
-    if frame % 500 == 0:
-      modified = get_last_modified()
-      if self.dp_last_modified != modified:
-        self.dragon_lat_ctrl, \
-        self.dragon_enable_steering_on_signal, \
-        self.dragon_blinker_off_timer = common_controller_update()
-        self.dp_last_modified = modified
 
     P = self.params
 
@@ -97,17 +84,7 @@ class CarController():
     if (frame % P.STEER_STEP) == 0:
       lkas_enabled = enabled and not CS.out.steerWarning and CS.out.vEgo > P.MIN_STEER_SPEED
       if lkas_enabled:
-        if CS.out.vEgo < 8.0:
-          self.steer_max = 180
-        elif CS.out.vEgo < 12.5:
-          self.steer_max = 220
-        elif CS.out.vEgo < 16.6:
-          self.steer_max = 250
-        elif CS.out.vEgo < 20.0:
-          self.steer_max = 260
-        else:
-          self.steer_max = P.STEER_MAX * 0.9
-        new_steer = actuators.steer * self.steer_max
+        new_steer = actuators.steer * P.STEER_MAX
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
         self.steer_rate_limited = new_steer != apply_steer
       else:
@@ -115,18 +92,6 @@ class CarController():
 
       self.apply_steer_last = apply_steer
       idx = (frame // P.STEER_STEP) % 4
-
-      blinker_on = CS.out.leftBlinker or CS.out.rightBlinker
-      if not enabled:
-        self.blinker_end_frame = 0
-      if self.last_blinker_on and not blinker_on:
-        self.blinker_end_frame = frame + self.dragon_blinker_off_timer
-      lkas_enabled = common_controller_ctrl(enabled,
-                                         self.dragon_lat_ctrl,
-                                         self.dragon_enable_steering_on_signal,
-                                         blinker_on or frame < self.blinker_end_frame,
-                                         lkas_enabled)
-      self.last_blinker_on = blinker_on
 
       can_sends.append(gmcan.create_steering_control(self.packer_pt,
         CanBus.POWERTRAIN, apply_steer, idx, lkas_enabled))
