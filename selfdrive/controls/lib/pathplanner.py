@@ -12,7 +12,6 @@ from cereal import log
 # dragonpilot
 from common.dp import get_last_modified
 from common.numpy_fast import interp
-from selfdrive.controls.lib.curvature_learner import CurvatureLearner
 
 LaneChangeState = log.PathPlan.LaneChangeState
 LaneChangeDirection = log.PathPlan.LaneChangeDirection
@@ -83,9 +82,6 @@ class PathPlanner():
     self.dp_steer_ratio = 0.
     self.dp_sr_boost_bp = None
     self.dp_sr_boost_range = None
-
-    self.frame = 0
-    self.curvature_offset = CurvatureLearner(debug=False)
 
   def setup_mpc(self):
     self.libmpc = libmpc_py.libmpc
@@ -172,12 +168,7 @@ class PathPlanner():
     # Run MPC
     self.angle_steers_des_prev = self.angle_steers_des_mpc
     VM.update_params(sm['liveParameters'].stiffnessFactor, sm['liveParameters'].steerRatio)
-    if active:
-      curvfac = self.curvature_offset.update(angle_steers - angle_offset, self.LP.d_poly, v_ego)
-    else:
-      curvfac = 0.
-    curvature_factor = VM.curvature_factor(v_ego) + curvfac
-
+    curvature_factor = VM.curvature_factor(v_ego)
     boost_rate = (1 + (interp(abs(angle_steers), self.dp_sr_boost_bp, self.dp_sr_boost_range) / 100)) if self.dp_enable_sr_boost else 1
     self.dp_steer_ratio = VM.sR * boost_rate
 
