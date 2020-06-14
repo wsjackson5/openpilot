@@ -78,7 +78,7 @@ class CarInterface(CarInterfaceBase):
     #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
     #ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
     ret.steerRateCost = 1.0
-    ret.steerActuatorDelay = 0.2  # Default delay, not measured yet
+    ret.steerActuatorDelay = 0.15  # Default delay, not measured yet
 
     if candidate == CAR.VOLT:
       # supports stop and go, but initial engage must be above 18mph (which include conservatism)
@@ -113,10 +113,10 @@ class CarInterface(CarInterfaceBase):
       # outer and inner are gains. Higher values = more steering
       #
       ret.lateralTuning.init('indi')
-      ret.lateralTuning.indi.innerLoopGain = 4.0
-      ret.lateralTuning.indi.outerLoopGain = 2.8
-      ret.lateralTuning.indi.timeConstant = 1.0
-      ret.lateralTuning.indi.actuatorEffectiveness = 1.5
+      ret.lateralTuning.indi.innerLoopGain = 3.6
+      ret.lateralTuning.indi.outerLoopGain = 2.6
+      ret.lateralTuning.indi.timeConstant = 1.3
+      ret.lateralTuning.indi.actuatorEffectiveness = 1.8
 
       tire_stiffness_factor = 1.0
 
