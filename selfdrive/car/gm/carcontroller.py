@@ -2,7 +2,7 @@ from cereal import car
 from common.realtime import DT_CTRL
 from common.numpy_fast import interp
 from selfdrive.config import Conversions as CV
-from selfdrive.car import apply_std_steer_torque_limits
+from selfdrive.car import apply_std_steer_torque_limits, create_gas_command
 from selfdrive.car.gm import gmcan
 from selfdrive.car.gm.values import DBC, CanBus, AccState
 from opendbc.can.packer import CANPacker
@@ -105,6 +105,7 @@ class CarController():
     # *** apply pedal hysteresis ***
     final_brake, self.brake_steady = actuator_hystereses(
       final_pedal, self.pedal_steady)
+    final_pedal2 = final_pedal
 
     if not enabled:
       # Stock ECU sends max regen when not enabled.
@@ -120,11 +121,19 @@ class CarController():
 
       #at_full_stop = enabled and CS.out.standstill
       #near_stop = enabled and (CS.out.vEgo < P.NEAR_STOP_BRAKE_PHASE)
-      car_stopping = apply_gas < P.ZERO_GAS
-      standstill = CS.pcm_acc_status == AccState.STANDSTILL
-      at_full_stop = enabled and standstill and car_stopping
-      near_stop = enabled and (CS.out.vEgo < P.NEAR_STOP_BRAKE_PHASE) and car_stopping
-      can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, CanBus.CHASSIS, apply_brake, idx, near_stop, at_full_stop))
+      #car_stopping = apply_gas < P.ZERO_GAS
+      #standstill = CS.pcm_acc_status == AccState.STANDSTILL
+      #at_full_stop = enabled and standstill and car_stopping
+      #near_stop = enabled and (CS.out.vEgo < P.NEAR_STOP_BRAKE_PHASE) and car_stopping
+      #can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, CanBus.CHASSIS, apply_brake, idx, near_stop, at_full_stop))
+
+      #final_pedal2
+      #use combined gas & brake, adjust for apparent pedal_pivot
+      #It seems in L mode, accel / decel point is around 1/5
+      final_pedal2 + 0.2
+      pedal_gas = clip(final_pedal2, 0., 1.)
+      #pedal_gas = clip(actuators.gas, 0., 1.)
+      can_sends.append(create_gas_command(self.packer_pt, pedal_gas, idx))
 
       #at_full_stop = enabled and CS.out.standstill
       #can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, apply_gas, idx, enabled, at_full_stop))
