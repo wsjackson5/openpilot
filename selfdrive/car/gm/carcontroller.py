@@ -15,8 +15,8 @@ class CarControllerParams():
     if car_fingerprint in SUPERCRUISE_CARS:
       self.STEER_MAX = 150
       self.STEER_STEP = 1              # how often we update the steer cmd
-      self.STEER_DELTA_UP = 2          # 0.75s time to peak torque
-      self.STEER_DELTA_DOWN = 5        # 0.3s from peak torque to zero
+      self.STEER_DELTA_UP = 3          # 0.75s time to peak torque
+      self.STEER_DELTA_DOWN = 3        # 0.3s from peak torque to zero
       self.MIN_STEER_SPEED = -1.       # can steer down to zero
     else:
       self.STEER_MAX = 300
