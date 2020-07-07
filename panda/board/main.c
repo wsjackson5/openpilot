@@ -143,6 +143,7 @@ void set_safety_mode(uint16_t mode, int16_t param) {
       }
       can_silent = ALL_CAN_LIVE;
       break;
+      //TODO: add GM case that captures rolling counters
     default:
       set_intercept_relay(true);
       heartbeat_counter = 0U;
@@ -717,11 +718,11 @@ void TIM1_BRK_TIM9_IRQ_Handler(void) {
       if (current_safety_mode != SAFETY_SILENT) {
         set_safety_mode(SAFETY_SILENT, 0U);
       }
-      //if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
-        //set_power_save_state(POWER_SAVE_STATUS_ENABLED);
+      // if (power_save_status != POWER_SAVE_STATUS_ENABLED) {
+      //   set_power_save_state(POWER_SAVE_STATUS_ENABLED);
+      // }
       //temp disable power save
       set_power_save_state(POWER_SAVE_STATUS_DISABLED);
-      }
 
       // Also disable fan and IR when the heartbeat goes missing
       current_board->set_fan_power(0U);

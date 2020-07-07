@@ -274,6 +274,9 @@ void pedal(void) {
   pdl0 = adjust(adc_get(ADCCHAN_ACCEL0));
   pdl1 = adjust(adc_get(ADCCHAN_ACCEL1));
 
+
+
+
   // write the pedal to the DAC
   if (state == NO_FAULT) {
     dac_set(0, MAX(gas_set_0, pdl0));
