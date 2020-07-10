@@ -77,7 +77,7 @@ class CarInterface(CarInterfaceBase):
     #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
     #ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.2], [0.00]]
     #ret.lateralTuning.pid.kf = 0.00004   # full torque for 20 deg at 80mph means 0.00007818594
-    ret.steerRateCost = 0.4
+    ret.steerRateCost = 1.0
     ret.steerActuatorDelay = 0.4  # Default delay, not measured yet
     ret.enableGasInterceptor = 0x201 in fingerprint[0]
 
@@ -114,10 +114,10 @@ class CarInterface(CarInterfaceBase):
       # outer and inner are gains. Higher values = more steering
       #
       ret.lateralTuning.init('indi')
-      ret.lateralTuning.indi.innerLoopGain = 5.5
-      ret.lateralTuning.indi.outerLoopGain = 4.5
+      ret.lateralTuning.indi.innerLoopGain = 6.0
+      ret.lateralTuning.indi.outerLoopGain = 5.0
       ret.lateralTuning.indi.timeConstant = 1.8
-      ret.lateralTuning.indi.actuatorEffectiveness = 2.3
+      ret.lateralTuning.indi.actuatorEffectiveness = 2.4
 
       tire_stiffness_factor = 1.0
 
@@ -187,10 +187,10 @@ class CarInterface(CarInterfaceBase):
     ret.tireStiffnessFront, ret.tireStiffnessRear = scale_tire_stiffness(ret.mass, ret.wheelbase, ret.centerToFront,
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
-    ret.longitudinalTuning.kpBP = [0., 5., 35.]
-    ret.longitudinalTuning.kpV = [3.3, 2.425, 2.2]
+    ret.longitudinalTuning.kpBP = [0., 35.]
+    ret.longitudinalTuning.kpV = [0.5, 0.3]
     ret.longitudinalTuning.kiBP = [0., 35.]
-    ret.longitudinalTuning.kiV = [0.18, 0.36]
+    ret.longitudinalTuning.kiV = [0.05, 0.03]
 
     ret.stoppingControl = True
     ret.startAccel = 0.8
