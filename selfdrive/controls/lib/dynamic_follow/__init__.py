@@ -38,7 +38,7 @@ class DynamicFollow:
     self.TR = 1.8
     # self.v_lead_retention = 2.0  # keep only last x seconds
     self.v_ego_retention = 2.5
-    self.v_rel_retention = 1.5
+    self.v_rel_retention = 1.75
 
     # dp params
     self.last_ts = 0.
@@ -112,7 +112,7 @@ class DynamicFollow:
 
   def _change_cost(self, libmpc):
     TRs = [0.9, 1.8, 2.7]
-    costs = [1.0, 0.115, 0.05]
+    costs = [1.25, 0.2, 0.075]
     cost = interp(self.TR, TRs, costs)
     if self.last_cost != cost:
       libmpc.change_tr(MPC_COST_LONG.TTC, cost, MPC_COST_LONG.ACCELERATION, MPC_COST_LONG.JERK)
@@ -228,7 +228,7 @@ class DynamicFollow:
     return TR, profile_mod_pos, profile_mod_neg
 
   def _get_TR(self):
-    x_vel = [0.0, 2.778, 5.556, 8.333, 11.111, 13.889, 16.667, 19.444, 22.222, 25.0, 30.556, 33.333, 36.111]  # velocities
+    x_vel = [0.0, 2.778, 5.556, 8.333, 11.111, 13.889, 16.667, 19.444, 22.222, 25.0, 27.778]  # velocities
     profile_mod_x = [2.2352, 13.4112, 24.5872, 35.7632]  # profile mod speeds, mph: [5., 30., 55., 80.]
 
     if self.dp_df_profile == PROFILE_AUTO:  # decide which profile to use, model profile will be updated before this
@@ -244,18 +244,18 @@ class DynamicFollow:
       df_profile = self.dp_df_profile
 
     if df_profile == PROFILE_LONG:
-      y_dist = [2.50, 2.7363, 2.754, 3.06, 3.564, 4.1472, 5.369, 5.814, 5.897, 6.048, 6.1608, 6.186, 6.142]  # TRs
+      y_dist = [1.4, 1.6, 1.65, 1.75, 1.9, 2.1, 2.25, 2.4, 2.45, 2.5, 2.52]  # TRs
       profile_mod_pos = [0.92, 0.7, 0.25, 0.15]
       profile_mod_neg = [1.1, 1.3, 2.0, 2.3]
     elif df_profile == PROFILE_SHORT:  # for in congested traffic
       #x_vel = [0.0, 1.892, 3.7432, 5.8632, 8.0727, 10.7301, 14.343, 17.6275, 22.4049, 28.6752, 34.8858, 40.35]
       # y_dist = [1.3781, 1.3791, 1.3802, 1.3825, 1.3984, 1.4249, 1.4194, 1.3162, 1.1916, 1.0145, 0.9855, 0.9562]  # original
       # y_dist = [1.3781, 1.3791, 1.3112, 1.2442, 1.2306, 1.2112, 1.2775, 1.1977, 1.0963, 0.9435, 0.9067, 0.8749]  # avg. 7.3 ft closer from 18 to 90 mph
-      y_dist = [1.5, 1.824, 1.62, 1.8, 1.98, 2.304, 2.64, 2.983, 3.42, 3.686, 4.032, 4.40, 4.759]
+      y_dist = [1.4, 1.41, 1.42, 1.45, 1.5, 1.6, 1.7, 1.864, 2.138, 2.303, 2.52]
       profile_mod_pos = [1.05, 1.55, 2.6, 3.75]
       profile_mod_neg = [0.84, .275, 0.1, 0.05]
     elif df_profile == PROFILE_NORMAL:  # default to relaxed/stock
-      y_dist = [2.0, 2.189, 2.268, 2.52, 2.871, 3.456, 3.696, 4.027, 4.791, 5.04, 5.281, 5.234, 5.237]
+      y_dist = [1.4, 1.41, 1.44, 1.55, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5, 2.52]
       profile_mod_pos = [1.0] * 4
       profile_mod_neg = [1.0] * 4
     else:
