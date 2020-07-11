@@ -18,42 +18,42 @@ class CarInterface(CarInterfaceBase):
   def compute_gb(accel, speed):
     return float(accel) / 4.0
     # return float(accel) / 4.0
-    creep_brake = 0.0
-    creep_speed = 2.68
-    creep_brake_value = 0.10
-    if speed < creep_speed:
-      creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
-    return float(accel) / 4.8 - creep_brake
+    #creep_brake = 0.0
+    #creep_speed = 2.68
+    #creep_brake_value = 0.10
+    #if speed < creep_speed:
+      #creep_brake = (creep_speed - speed) / creep_speed * creep_brake_value
+    #return float(accel) / 4.8 - creep_brake
 
-  @staticmethod
-  def calc_accel_override(a_ego, a_target, v_ego, v_target):
+  #@staticmethod
+  #def calc_accel_override(a_ego, a_target, v_ego, v_target):
     # normalized max accel. Allowing max accel at low speed causes speed overshoots
-    max_accel_bp = [10, 20]    # m/s
-    max_accel_v = [0.85, 1.0]  # unit of max accel
-    max_accel = interp(v_ego, max_accel_bp, max_accel_v)
+    #max_accel_bp = [10, 20]    # m/s
+    #max_accel_v = [0.85, 1.0]  # unit of max accel
+    #max_accel = interp(v_ego, max_accel_bp, max_accel_v)
 
     # limit the pcm accel cmd if:
     # - v_ego exceeds v_target, or
     # - a_ego exceeds a_target and v_ego is close to v_target
 
-    eA = a_ego - a_target
-    valuesA = [1.0, 0.1]
-    bpA = [0.3, 1.1]
+    #eA = a_ego - a_target
+    #valuesA = [1.0, 0.1]
+    #bpA = [0.3, 1.1]
 
-    eV = v_ego - v_target
-    valuesV = [1.0, 0.1]
-    bpV = [0.0, 0.5]
+    #eV = v_ego - v_target
+    #valuesV = [1.0, 0.1]
+    #bpV = [0.0, 0.5]
 
-    valuesRangeV = [1., 0.]
-    bpRangeV = [-1., 0.]
+    #valuesRangeV = [1., 0.]
+    #bpRangeV = [-1., 0.]
 
     # only limit if v_ego is close to v_target
-    speedLimiter = interp(eV, bpV, valuesV)
-    accelLimiter = max(interp(eA, bpA, valuesA), interp(eV, bpRangeV, valuesRangeV))
+    #speedLimiter = interp(eV, bpV, valuesV)
+    #accelLimiter = max(interp(eA, bpA, valuesA), interp(eV, bpRangeV, valuesRangeV))
 
     # accelOverride is more or less the max throttle allowed to pcm: usually set to a constant
     # unless aTargetMax is very high and then we scale with it; this help in quicker restart
-    return float(max(max_accel, a_target / FOLLOW_AGGRESSION)) * min(speedLimiter, accelLimiter)
+    #return float(max(max_accel, a_target / FOLLOW_AGGRESSION)) * min(speedLimiter, accelLimiter)
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):
@@ -187,10 +187,14 @@ class CarInterface(CarInterfaceBase):
     ret.tireStiffnessFront, ret.tireStiffnessRear = scale_tire_stiffness(ret.mass, ret.wheelbase, ret.centerToFront,
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
-    ret.longitudinalTuning.kpBP = [0., 35.]
-    ret.longitudinalTuning.kpV = [1.0, 0.8]
-    ret.longitudinalTuning.kiBP = [0., 35.]
-    ret.longitudinalTuning.kiV = [0.15, 0.12]
+    #ret.longitudinalTuning.kpBP = [0., 35.]
+    #ret.longitudinalTuning.kpV = [1.0, 0.8]
+    #ret.longitudinalTuning.kiBP = [0., 35.]
+    #ret.longitudinalTuning.kiV = [0.15, 0.12]
+    ret.longitudinalTuning.kpBP = [0.]
+    ret.longitudinalTuning.kpV = [1.0]
+    ret.longitudinalTuning.kiBP = [0.]
+    ret.longitudinalTuning.kiV = [0.14]
 
     ret.stoppingControl = True
     ret.startAccel = 0.8
