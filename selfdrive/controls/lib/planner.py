@@ -51,10 +51,10 @@ _AP_CRUISE_MIN_V_SPORT = [-5.0, -4.5, -3.5, -2.5, -2.0]
 _AP_CRUISE_MIN_V_FOLLOWING = [-5.0, -4.5, -3.5, -2.5, -2.0]
 _AP_CRUISE_MIN_BP = [0.0, 5.0, 10.0, 20.0, 55.0]
 
-_AP_CRUISE_MAX_V = [0.8, 1.0, 1.2, 0.5, .3]
+_AP_CRUISE_MAX_V = [0.9, 1.0, 1.2, 0.5, .3]
 _AP_CRUISE_MAX_V_ECO = [0.7, 0.9, 1.0, 0.5, 0.3]
 _AP_CRUISE_MAX_V_SPORT = [1.0, 1.5, 2.0, 1.5, 1.0]
-_AP_CRUISE_MAX_V_FOLLOWING = [1.0, 1.2, 1.3, .7, .3]
+_AP_CRUISE_MAX_V_FOLLOWING = [1.0, 1.1, 1.2, .5, .3]
 _AP_CRUISE_MAX_BP = [0., 5., 10., 20., 55.]
 
 # Lookup table for turns
