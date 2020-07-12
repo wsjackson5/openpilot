@@ -77,7 +77,7 @@ class LongControl():
     """Update longitudinal control. This updates the state machine and runs a PID loop"""
     # Actuation limits
     gas_max = interp(v_ego, CP.gasMaxBP, CP.gasMaxV)
-    brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
+    #brake_max = interp(v_ego, CP.brakeMaxBP, CP.brakeMaxV)
 
     # Update state machine
     output_gb = self.last_output_gb
@@ -96,7 +96,8 @@ class LongControl():
     elif self.long_control_state == LongCtrlState.pid:
       self.v_pid = v_target
       self.pid.pos_limit = gas_max
-      self.pid.neg_limit = - brake_max
+      #self.pid.neg_limit = - brake_max
+      self.pid.neg_limit = 0.0
 
       # Toyota starts braking more when it thinks you want to stop
       # Freeze the integrator so we don't accelerate to compensate, and don't allow positive acceleration
@@ -111,22 +112,24 @@ class LongControl():
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
-      if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
-        output_gb -= STOPPING_BRAKE_RATE / RATE
-      output_gb = clip(output_gb, -brake_max, gas_max)
+      #if not standstill or output_gb > -BRAKE_STOPPING_TARGET:
+        #output_gb -= STOPPING_BRAKE_RATE / RATE
+      #output_gb = clip(output_gb, -brake_max, gas_max)
+      output_gb = 0.
 
       self.v_pid = v_ego
       self.pid.reset()
 
     # Intention is to move again, release brake fast before handing control to PID
     elif self.long_control_state == LongCtrlState.starting:
-      if output_gb < -0.2:
-        output_gb += STARTING_BRAKE_RATE / RATE
+      #if output_gb < -0.2:
+        #output_gb += STARTING_BRAKE_RATE / RATE
       self.v_pid = v_ego
       self.pid.reset()
 
     self.last_output_gb = output_gb
     final_gas = clip(output_gb, 0., gas_max)
-    final_brake = -clip(output_gb, -brake_max, 0.)
+    #final_brake = -clip(output_gb, -brake_max, 0.)
+    final_brake = 0.
 
     return final_gas, final_brake
