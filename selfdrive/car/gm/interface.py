@@ -114,10 +114,10 @@ class CarInterface(CarInterfaceBase):
       # outer and inner are gains. Higher values = more steering
       #
       ret.lateralTuning.init('indi')
-      ret.lateralTuning.indi.innerLoopGain = 5.5
-      ret.lateralTuning.indi.outerLoopGain = 4.8
+      ret.lateralTuning.indi.innerLoopGain = 5.0
+      ret.lateralTuning.indi.outerLoopGain = 4.2
       ret.lateralTuning.indi.timeConstant = 1.8
-      ret.lateralTuning.indi.actuatorEffectiveness = 2.4
+      ret.lateralTuning.indi.actuatorEffectiveness = 2.0
 
       tire_stiffness_factor = 1.0
 
@@ -199,8 +199,8 @@ class CarInterface(CarInterfaceBase):
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 9., 35]
       ret.gasMaxV = [0.2, 0.5, 0.7]
-      ret.longitudinalTuning.deadzoneBP = [0., 9.]
-      ret.longitudinalTuning.deadzoneV = [0., .15]
+      #ret.longitudinalTuning.deadzoneBP = [0., 9.]
+      #ret.longitudinalTuning.deadzoneV = [0., .15]
 
     #ret.stoppingControl = True
     ret.stoppingControl = False
@@ -257,6 +257,7 @@ class CarInterface(CarInterfaceBase):
 
     if self.CS.regen_pressed:
       events.append(create_event('manualSteeringRequired', [ET.WARNING]))
+      ret.openpilotLongitudinalControl = False
 
     if ret.cruiseState.enabled and not self.cruise_enable_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
