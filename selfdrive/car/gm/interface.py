@@ -257,7 +257,7 @@ class CarInterface(CarInterfaceBase):
 
     if self.CS.regen_pressed:
       events.append(create_event('manualSteeringRequired', [ET.WARNING]))
-      ret.openpilotLongitudinalControl = False
+      #ret.openpilotLongitudinalControl = False
 
     if ret.cruiseState.enabled and not self.cruise_enable_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
