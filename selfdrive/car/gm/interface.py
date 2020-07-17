@@ -192,9 +192,9 @@ class CarInterface(CarInterfaceBase):
     #ret.longitudinalTuning.kiBP = [0., 35.]
     #ret.longitudinalTuning.kiV = [0.15, 0.12]
     ret.longitudinalTuning.kpBP = [0., 35.]
-    ret.longitudinalTuning.kpV = [0.5, 0.7]
+    ret.longitudinalTuning.kpV = [0.6, 0.7]
     ret.longitudinalTuning.kiBP = [0., 35.]
-    ret.longitudinalTuning.kiV = [0.1, 0.2]
+    ret.longitudinalTuning.kiV = [0.12, 0.2]
 
     if ret.enableGasInterceptor:
       ret.gasMaxBP = [0., 9., 35]
@@ -257,7 +257,11 @@ class CarInterface(CarInterfaceBase):
 
     if self.CS.regen_pressed:
       events.append(create_event('manualSteeringRequired', [ET.WARNING]))
-      #ret.openpilotLongitudinalControl = False
+      if ret.enableGasInterceptor:
+        ret.openpilotLongitudinalControl = False
+    else:
+      if ret.enableGasInterceptor:
+        ret.openpilotLongitudinalControl = True
 
     if ret.cruiseState.enabled and not self.cruise_enable_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
