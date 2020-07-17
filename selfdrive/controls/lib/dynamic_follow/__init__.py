@@ -245,7 +245,7 @@ class DynamicFollow:
 
     if df_profile == PROFILE_LONG:
       #y_dist = [1.4, 1.6, 1.65, 1.75, 1.9, 2.1, 2.25, 2.4, 2.45, 2.5, 2.52]  # TRs
-      y_dist = [1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.45, 2.6, 2.75, 2.9, 3.05]
+      y_dist = [2.2, 2.2, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0]
       profile_mod_pos = [0.92, 0.7, 0.25, 0.15]
       profile_mod_neg = [1.1, 1.3, 2.0, 2.3]
     elif df_profile == PROFILE_SHORT:  # for in congested traffic
@@ -254,12 +254,12 @@ class DynamicFollow:
       # y_dist = [1.3781, 1.3791, 1.3112, 1.2442, 1.2306, 1.2112, 1.2775, 1.1977, 1.0963, 0.9435, 0.9067, 0.8749]  # avg. 7.3 ft closer from 18 to 90 mph
       #y_dist = [1.4, 1.41, 1.42, 1.45, 1.5, 1.6, 1.7, 1.864, 2.138, 2.303, 2.52]
       #y_dist = [2.0, 2.05, 2.1, 2.2, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3]
-      y_dist = [1.4, 1.41, 1.44, 1.55, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5, 2.52]
+      y_dist = [1.8, 1.8, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6]
       profile_mod_pos = [1.05, 1.55, 2.6, 3.75]
       profile_mod_neg = [0.84, .275, 0.1, 0.05]
     elif df_profile == PROFILE_NORMAL:  # default to relaxed/stock
       #y_dist = [1.4, 1.41, 1.44, 1.55, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5, 2.52]
-      y_dist = [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.25, 2.4, 2.5, 2.65, 2.8]
+      y_dist = [2.0, 2.0, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8]
       #y_dist = [1.4, 1.6, 1.65, 1.75, 1.9, 2.1, 2.25, 2.4, 2.45, 2.5, 2.52]
       profile_mod_pos = [1.0] * 4
       profile_mod_neg = [1.0] * 4
@@ -270,7 +270,7 @@ class DynamicFollow:
     profile_mod_pos = interp(self.car_data.v_ego, profile_mod_x, profile_mod_pos)
     profile_mod_neg = interp(self.car_data.v_ego, profile_mod_x, profile_mod_neg)
 
-    sng_TR = 1.8  # reacceleration stop and go TR
+    sng_TR = 1.5  # reacceleration stop and go TR
     sng_speed = 18.0 * CV.KPH_TO_MS
 
     if self.car_data.v_ego > sng_speed:  # keep sng distance until we're above sng speed again
