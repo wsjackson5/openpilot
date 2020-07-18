@@ -145,10 +145,10 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
   v_cruise_kph_last = v_cruise_kph
 
   # if stock cruise is completely disabled, then we can use our own set speed logic
-  if not CP.enableCruise:
-    v_cruise_kph = update_v_cruise(v_cruise_kph, CS.buttonEvents, enabled)
-  elif CP.enableCruise and CS.cruiseState.enabled:
-    v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
+  if CS.cruiseState.enabled and not CS.stockCruise and CP.enableGasInterceptor:
+    v_cruise_kph = update_v_cruise(CS.vEgo, v_cruise_kph, v_cruise_kph_last, CS.buttonEvents, enabled)
+  elif CS.stockCruise and CP.enableGasInterceptor:
+    v_cruise_kph = 0
 
   # decrease the soft disable timer at every step, as it's reset on
   # entrance in SOFT_DISABLING state
@@ -167,7 +167,7 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
         else:
           state = State.enabled
         AM.add(frame, "enable", enabled)
-        v_cruise_kph = initialize_v_cruise(CS.vEgo, CS.buttonEvents, v_cruise_kph_last)
+        v_cruise_kph = 0
 
   # ENABLED
   elif state == State.enabled:

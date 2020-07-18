@@ -15,10 +15,12 @@ class CarState(CarStateBase):
     can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = can_define.dv["ECMPRDNL"]["PRNDL"]
     self.user_gas, self.user_gas_pressed = 0., 0
+    self.stockCruise_prev = False
+    self.stockCruise = False
 
   def update(self, pt_cp):
     ret = car.CarState.new_message()
-
+    self.stockCruise_prev = self.stockCruise
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]['ACCButtons']
     ret.wheelSpeeds.fl = pt_cp.vl["EBCMWheelSpdFront"]['FLWheelSpd'] * CV.KPH_TO_MS
@@ -76,6 +78,17 @@ class CarState(CarStateBase):
     ret.brakePressed = ret.brake > 1e-5
     ret.cruiseState.available = self.main_on
     ret.cruiseState.enabled = self.pcm_acc_status != 0
+
+    # Stock Cruise Status
+    if ret.cruiseState.enabled and self.cruise_buttons == 3 and not self.stockCruise_prev:
+      self.stockCruise = True
+    elif ret.cruiseState.enabled and self.cruise_buttons == 6 and self.stockCruise_prev:
+      self.stockCruise = False
+    elif not ret.cruiseState.enabled and self.stockCruise_prev:
+      self.stockCruise = False
+    elif self.main_on and not ret.cruiseState.enabled and self.cruise_buttons == 3 and not self.stockCruise_prev:
+      self.stockCruise = True
+
     ret.cruiseState.standstill = False
 
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
