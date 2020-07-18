@@ -65,13 +65,13 @@ def update_v_cruise(v_ego, v_cruise_kph, v_cruise_kph_last, buttonEvents, enable
   for b in buttonEvents:
     if enabled and not b.pressed:
       if b.type == "accelCruise":
-        if v_cruise_kph_last = 0:
+        if v_cruise_kph_last == 0:
 		  v_cruise_kph = int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
 		else:
 		  v_cruise_kph += V_CRUISE_DELTA - (v_cruise_kph % V_CRUISE_DELTA)
 		  v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
       elif b.type == "cancle":
-	    if v_cruise_kph_last = 0:
+	    if v_cruise_kph_last == 0:
 		  v_cruise_kph = int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
         else:
 		  v_cruise_kph -= V_CRUISE_DELTA - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA)
