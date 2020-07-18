@@ -99,7 +99,7 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1616. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.60096
-      ret.steerRatio = 16.8
+      ret.steerRatio = 18.0
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.4 # wild guess
       #ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.,41.0], [0.,41.0]]
@@ -257,11 +257,6 @@ class CarInterface(CarInterfaceBase):
 
     if self.CS.regen_pressed:
       events.append(create_event('manualSteeringRequired', [ET.WARNING]))
-      if ret.enableGasInterceptor:
-        ret.openpilotLongitudinalControl = False
-    else:
-      if ret.enableGasInterceptor:
-        ret.openpilotLongitudinalControl = True
 
     if ret.cruiseState.enabled and not self.cruise_enable_prev:
       events.append(create_event('pcmEnable', [ET.ENABLE]))
