@@ -146,7 +146,7 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
   v_cruise_kph_last = v_cruise_kph
 
   # if stock cruise is completely disabled, then we can use our own set speed logic
-  if not CP.enableCruise and CS.longControlStart:
+  if CS.longControlStart:
     v_cruise_kph = update_v_cruise(v_cruise_kph, CS.buttonEvents, enabled)
   elif not CS.longControlStart and CS.cruiseState.enabled:
     v_cruise_kph = initialize_v_cruise_pedal(CS.vEgo, CS.buttonEvents, v_cruise_kph_last)

@@ -281,6 +281,7 @@ class CarInterface(CarInterfaceBase):
       elif not ret.cruiseState.enabled:
         ret.stockCruise = False
 
+    for b in ret.buttonEvents:
       if ret.cruiseState.enabled and not self.longControlStart_prev:
         if b.type in [ButtonType.accelCruise, ButtonType.cancel] and not b.pressed:
           ret.longControlStart = True
