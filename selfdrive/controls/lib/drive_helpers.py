@@ -59,29 +59,22 @@ def get_steer_max(CP, v_ego):
   return interp(v_ego, CP.steerMaxBP, CP.steerMaxV)
 
 
-def update_v_cruise(v_ego, v_cruise_kph, v_cruise_kph_last, buttonEvents, enabled):
+def update_v_cruise(v_cruise_kph, buttonEvents, enabled):
   # handle button presses. TODO: this should be in state_control, but a decelCruise press
   # would have the effect of both enabling and changing speed is checked after the state transition
   for b in buttonEvents:
     if enabled and not b.pressed:
       if b.type == "accelCruise":
-        #if v_cruise_kph_last == 0:
-		  #return int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
-        #else:
         v_cruise_kph += V_CRUISE_DELTA - (v_cruise_kph % V_CRUISE_DELTA)
-        v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
     elif b.type == "cancel":
-	    #if v_cruise_kph_last == 0:
-		  #return int(round(clip(v_ego * CV.MS_TO_KPH, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
-        #else:
         v_cruise_kph -= V_CRUISE_DELTA - ((V_CRUISE_DELTA - v_cruise_kph) % V_CRUISE_DELTA)
-        v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
+      v_cruise_kph = clip(v_cruise_kph, V_CRUISE_MIN, V_CRUISE_MAX)
 
   return v_cruise_kph
 
 def initialize_v_cruise_pedal(v_ego, buttonEvents, v_cruise_last):
   for b in buttonEvents:
-    if b.type == "accelCruise" or b.type == "cancel":
+    if b.type == "accelCruise" or b.type == "cancel" not b.pressed:
       v_cruise = v_ego * CV.MS_TO_KPH
 
   return int(round(clip(v_cruise, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))

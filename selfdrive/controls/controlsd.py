@@ -16,7 +16,8 @@ from selfdrive.controls.lib.drive_helpers import get_events, \
                                                  create_event, \
                                                  EventTypes as ET, \
                                                  update_v_cruise, \
-                                                 initialize_v_cruise
+                                                 initialize_v_cruise, \
+                                                 initialize_v_cruise_pedal
 from selfdrive.controls.lib.longcontrol import LongControl, STARTING_TARGET_SPEED
 from selfdrive.controls.lib.latcontrol_pid import LatControlPID
 from selfdrive.controls.lib.latcontrol_indi import LatControlINDI
@@ -145,13 +146,12 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
   v_cruise_kph_last = v_cruise_kph
 
   # if stock cruise is completely disabled, then we can use our own set speed logic
-  if CS.cruiseState.enabled and not CS.stockCruise and CP.enableGasInterceptor:
-    if v_cruise_kph_last == 0:
-      v_cruise_kph = initialize_v_cruise_pedal(CS.vEgo, CS.buttonEvents, v_cruise_kph_last)
-    else:
-      v_cruise_kph = update_v_cruise(CS.vEgo, v_cruise_kph, v_cruise_kph_last, CS.buttonEvents, enabled)
-  elif CS.stockCruise and CP.enableGasInterceptor:
-    v_cruise_kph = 0
+  if not CP.enableCruise and CS.longControlStart:
+    v_cruise_kph = update_v_cruise(v_cruise_kph, CS.buttonEvents, enabled)
+  elif not CS.longControlStart and CS.cruiseState.enabled:
+    v_cruise_kph = initialize_v_cruise_pedal(CS.vEgo, CS.buttonEvents, v_cruise_kph_last)
+  #elif CP.enableCruise and CS.cruiseState.enabled:
+    #v_cruise_kph = CS.cruiseState.speed * CV.MS_TO_KPH
 
   # decrease the soft disable timer at every step, as it's reset on
   # entrance in SOFT_DISABLING state
@@ -170,7 +170,7 @@ def state_transition(frame, CS, CP, state, events, soft_disable_timer, v_cruise_
         else:
           state = State.enabled
         AM.add(frame, "enable", enabled)
-        v_cruise_kph = 0
+        v_cruise_kph = initialize_v_cruise(CS.vEgo, CS.buttonEvents, v_cruise_kph_last)
 
   # ENABLED
   elif state == State.enabled:

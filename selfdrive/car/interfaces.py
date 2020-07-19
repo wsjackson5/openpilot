@@ -25,6 +25,8 @@ class CarInterfaceBase():
     self.frame = 0
     self.low_speed_alert = False
     self.cruise_enable_prev = False
+    self.stockCruise_prev = False
+    self.longControlStart_prev = False
 
     self.CS = CarState(CP)
     self.cp = self.CS.get_can_parser(CP)

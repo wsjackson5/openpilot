@@ -238,8 +238,8 @@ class CarInterface(CarInterfaceBase):
         be.pressed = False
         but = self.CS.prev_cruise_buttons
       if but == CruiseButtons.RES_ACCEL:
-        if not (ret.cruiseState.enabled and ret.standstill):
-          be.type = ButtonType.accelCruise # Suppress resume button if we're resuming from stop so we don't adjust speed.
+        #if not (ret.cruiseState.enabled and ret.standstill):
+        be.type = ButtonType.accelCruise # Suppress resume button if we're resuming from stop so we don't adjust speed.
       elif but == CruiseButtons.DECEL_SET:
         be.type = ButtonType.decelCruise
       elif but == CruiseButtons.CANCEL:
@@ -271,13 +271,30 @@ class CarInterface(CarInterfaceBase):
 
     # handle button presses
     for b in ret.buttonEvents:
-      if b.type in [ButtonType.accelCruise, ButtonType.decelCruise] and not b.pressed:
-        events.append(create_event('buttonEnable', [ET.ENABLE]))
+      if ret.cruiseState.available and not self.stockCruise_prev:
+        if b.type in ButtonType.decelCruise and not b.pressed:
+          ret.stockCruise = True
+          events.append(create_event('buttonEnable', [ET.ENABLE]))
+      elif ret.cruiseState.enabled and self.stockCruise_prev:
+        if b.type in ButtonType.cancel and not b.pressed:
+          ret.stockCruise = False
+      elif not ret.cruiseState.enabled:
+        ret.stockCruise = False
 
+      if ret.cruiseState.enabled and not self.longControlStart_prev:
+        if b.type in [ButtonType.accelCruise, ButtonType.cancel] and not b.pressed:
+          ret.longControlStart = True
+      elif ret.cruiseState.enabled and self.stockCruise_prev:
+        if b.type in ButtonType.cancel and not b.pressed:
+          ret.longControlStart = True
+      elif not ret.cruiseState.enabled or self.stockCruise_prev:
+        ret.longControlStart = False
 
     ret.events = events
 
     self.cruise_enable_prev = ret.cruiseState.enabled
+    self.stockCruise_prev = ret.stockCruise
+    self.longControlStart_prev = ret.longControlStart
     # copy back carState packet to CS
     self.CS.out = ret.as_reader()
 
