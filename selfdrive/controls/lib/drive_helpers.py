@@ -74,7 +74,7 @@ def update_v_cruise(v_cruise_kph, buttonEvents, enabled):
 
 def initialize_v_cruise_pedal(v_ego, buttonEvents, v_cruise_last):
   for b in buttonEvents:
-    if b.type == "accelCruise" or b.type == "cancel" not b.pressed:
+    if (b.type == "accelCruise" or b.type == "cancel") and not b.pressed:
       v_cruise = v_ego * CV.MS_TO_KPH
 
   return int(round(clip(v_cruise, V_CRUISE_ENABLE_MIN, V_CRUISE_MAX)))
