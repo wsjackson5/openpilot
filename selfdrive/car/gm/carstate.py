@@ -81,16 +81,6 @@ class CarState(CarStateBase):
     ret.stockCruise = False
     ret.longControlStart = False
 
-    # Stock Cruise Status
-    if ret.cruiseState.enabled and self.cruise_buttons == 3 and not self.stockCruise_prev:
-      self.stockCruise = True
-    elif ret.cruiseState.enabled and self.cruise_buttons == 6 and self.stockCruise_prev:
-      self.stockCruise = False
-    elif not ret.cruiseState.enabled and self.stockCruise_prev:
-      self.stockCruise = False
-    elif self.main_on and not ret.cruiseState.enabled and self.cruise_buttons == 3 and not self.stockCruise_prev:
-      self.stockCruise = True
-
     ret.cruiseState.standstill = False
 
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
