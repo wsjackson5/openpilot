@@ -270,32 +270,32 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
     # handle button presses
-    for b in ret.buttonEvents:
-      if ret.cruiseState.available and not self.stockCruise_prev:
-        if b.type in ButtonType.decelCruise and not b.pressed:
-          ret.stockCruise = True
-          events.append(create_event('buttonEnable', [ET.ENABLE]))
-      elif ret.cruiseState.enabled and self.stockCruise_prev:
-        if b.type in ButtonType.cancel and not b.pressed:
-          ret.stockCruise = False
-      elif not ret.cruiseState.enabled:
-        ret.stockCruise = False
+    #for b in ret.buttonEvents:
+      #if ret.cruiseState.available and not self.stockCruise_prev:
+        #if b.type in ButtonType.decelCruise and not b.pressed:
+          #ret.stockCruise = True
+          #events.append(create_event('buttonEnable', [ET.ENABLE]))
+      #elif ret.cruiseState.enabled and self.stockCruise_prev:
+        #if b.type in ButtonType.cancel and not b.pressed:
+          #ret.stockCruise = False
+      #elif not ret.cruiseState.enabled:
+        #ret.stockCruise = False
 
-    for b in ret.buttonEvents:
-      if ret.cruiseState.enabled and not self.longControlStart_prev:
-        if b.type in [ButtonType.accelCruise, ButtonType.cancel] and not b.pressed:
-          ret.longControlStart = True
-      elif ret.cruiseState.enabled and self.stockCruise_prev:
-        if b.type in ButtonType.cancel and not b.pressed:
-          ret.longControlStart = True
-      elif not ret.cruiseState.enabled or self.stockCruise_prev:
-        ret.longControlStart = False
+    #for b in ret.buttonEvents:
+      #if ret.cruiseState.enabled and not self.longControlStart_prev:
+        #if b.type in [ButtonType.accelCruise, ButtonType.cancel] and not b.pressed:
+          #ret.longControlStart = True
+      #elif ret.cruiseState.enabled and self.stockCruise_prev:
+        #if b.type in ButtonType.cancel and not b.pressed:
+         # ret.longControlStart = True
+      #elif not ret.cruiseState.enabled or self.stockCruise_prev:
+        #ret.longControlStart = False
 
     ret.events = events
 
     self.cruise_enable_prev = ret.cruiseState.enabled
-    self.stockCruise_prev = ret.stockCruise
-    self.longControlStart_prev = ret.longControlStart
+    #self.stockCruise_prev = ret.stockCruise
+    #self.longControlStart_prev = ret.longControlStart
     # copy back carState packet to CS
     self.CS.out = ret.as_reader()
 
