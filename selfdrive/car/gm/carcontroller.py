@@ -116,7 +116,7 @@ class CarController():
       #apply_brake = int(round(interp(final_pedal, P.BRAKE_LOOKUP_BP, P.BRAKE_LOOKUP_V)))
 
     # Gas/regen and brakes - all at 25Hz
-    if CS.CP.enableGasInterceptor and not CS.regen_pressed: #and CS.out.longControlStart:
+    if enabled and CS.CP.enableGasInterceptor: #and CS.out.longControlStart:
       if (frame % 4) == 0:
         idx = (frame // 4) % 4
 

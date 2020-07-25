@@ -70,9 +70,9 @@ class CarState(CarStateBase):
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
 
-    self.regen_pressed = False
+    ret.regenPressed = False
     if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
-      self.regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
+      ret.regenPressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
 
     # Regen braking is braking
     ret.brakePressed = ret.brake > 1e-5
