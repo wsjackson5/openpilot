@@ -67,7 +67,6 @@ class LongControl():
                             convert=compute_gb)
     self.v_pid = 0.0
     self.last_output_gb = 0.0
-    self.resume_smooth = False
 
   def reset(self, v_pid):
     """Reset PID controller and change setpoint"""
@@ -92,13 +91,11 @@ class LongControl():
       self.v_pid = v_ego_pid
       self.pid.reset()
       output_gb = 0.
-      if (v_target - v_ego > 1.0) and regen_pressed:
-        self.resume_smooth = True
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
       self.v_pid = v_target
-      self.pid.pos_limit = gas_max if not self.resume_smooth else 0.3
+      self.pid.pos_limit = gas_max
       #self.pid.neg_limit = - brake_max
       self.pid.neg_limit = 0.0
 
@@ -112,9 +109,6 @@ class LongControl():
       if prevent_overshoot:
         output_gb = min(output_gb, 0.0)
 
-      if v_target - v_ego < 1.0:
-        self.resume_smooth = False
-        
     # Intention is to stop, switch to a different brake control until we stop
     elif self.long_control_state == LongCtrlState.stopping:
       # Keep applying brakes until the car is stopped
