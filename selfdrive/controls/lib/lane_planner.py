@@ -51,10 +51,6 @@ class LanePlanner():
     self.lane_width_certainty = 1.0
     self.lane_width = 2.85
 
-    self.lane_width = 2.85
-    self.readings = []
-    self.frame = 0
-
     self.l_prob = 0.
     self.r_prob = 0.
 
