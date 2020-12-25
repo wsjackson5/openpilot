@@ -55,6 +55,7 @@ class CarState(CarStateBase):
 
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    ret.cruiseState.available = self.main_on
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
 
@@ -62,11 +63,7 @@ class CarState(CarStateBase):
     # Regen braking is braking
     self.regen_pressed = False
     if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
-      ret.brakePressed = ret.brakePressed or bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
-    brake_light_enable = False
-    if self.car_fingerprint == CAR.BOLT:
-      if ret.aEgo < -1.3:
-        brake_light_enable = True
+      self.regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
 
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]['LKATorqueDeliveredStatus']
