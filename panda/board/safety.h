@@ -328,7 +328,7 @@ int set_safety_hooks(uint16_t mode, int16_t param) {
   }
   if (mode == SAFETY_NOOUTPUT) {
     disable_message_pump();
-  } 
+  }  
   return set_status;
 }
 
