@@ -55,12 +55,9 @@ class CarState(CarStateBase):
 
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
+    ret.cruiseState.available = self.main_on
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
-
-    ret.cruiseState.available = self.main_on
-    ret.cruiseState.enabled = self.pcm_acc_status != 0
-    ret.cruiseState.standstill = False
 
     ret.brakePressed = ret.brake > 1e-5
     # Regen braking is braking
