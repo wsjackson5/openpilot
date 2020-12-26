@@ -26,7 +26,8 @@ class CarState(CarStateBase):
     ret.wheelSpeeds.rr = pt_cp.vl["EBCMWheelSpdRear"]['RRWheelSpd'] * CV.KPH_TO_MS
     ret.vEgoRaw = mean([ret.wheelSpeeds.fl, ret.wheelSpeeds.fr, ret.wheelSpeeds.rl, ret.wheelSpeeds.rr])
     ret.vEgo, ret.aEgo = self.update_speed_kf(ret.vEgoRaw)
-    ret.standstill = ret.vEgoRaw < 0.01
+    ret.vEgo = pt_cp.vl["ECMVehicleSpeed"]["VehicleSpeed"] * CV.MPH_TO_MS
+    ret.standstill = not ret.vEgoRaw > 1.0
 
     ret.steeringAngle = pt_cp.vl["PSCMSteeringAngle"]['SteeringWheelAngle']
     ret.gearShifter = self.parse_gear_shifter(self.shifter_values.get(pt_cp.vl["ECMPRDNL"]['PRNDL'], None))
@@ -55,9 +56,11 @@ class CarState(CarStateBase):
 
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
-    ret.cruiseState.available = self.main_on
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
     self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
+    ret.cruiseState.available = self.main_on
+    ret.cruiseState.enabled = self.main_on
+    ret.cruiseState.standstill = False
 
     ret.brakePressed = ret.brake > 1e-5
     # Regen braking is braking
@@ -100,6 +103,7 @@ class CarState(CarStateBase):
       ("CruiseMainOn", "ECMEngineStatus", 0),
       ("ACCCmdActive", "ASCMActiveCruiseControlStatus", 0),
       ("LKATotalTorqueDelivered", "PSCMStatus", 0),
+      ("VehicleSpeed", "ECMVehicleSpeed", 0),
     ]
 
     if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
