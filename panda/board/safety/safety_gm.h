@@ -1,6 +1,6 @@
 // board enforces
 //   in-state
-//      cruise main on
+//      accel set/resume/main on
 //   out-state
 //      brake rising edge
 //      brake > 0mph
@@ -80,6 +80,7 @@ static void gm_set_op_lkas(CAN_FIFOMailBox_TypeDef *to_send) {
   gm_lkas_buffer.op_ts = TIM2->CNT;
 }
 
+
 static int gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
   bool valid = addr_safety_check(to_push, gm_rx_checks, GM_RX_CHECK_LEN,
@@ -107,7 +108,7 @@ static int gm_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       switch (button) {
         case 2:  // resume
         case 3:  // set
-        case 5: //main
+        case 5:  // set
           controls_allowed = 1;
           break;
         case 6:  // cancel
