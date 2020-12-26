@@ -6,7 +6,7 @@ from statistics import mean
 from cereal import log
 from common.params import Params, put_nonblocking
 from common.realtime import sec_since_boot
-from selfdrive.hardware import HARDWARE
+from selfdrive.hardware import HARDWARE, TICI
 from selfdrive.swaglog import cloudlog
 
 PANDA_OUTPUT_VOLTAGE = 5.28
@@ -84,9 +84,12 @@ class PowerMonitoring:
         # No ignition, we integrate the offroad power used by the device
         is_uno = health.health.hwType == log.HealthData.HwType.uno
         # Get current power draw somehow
-        current_power = HARDWARE.get_current_power_draw()
-        if current_power is not None:
-          pass
+        #current_power = HARDWARE.get_current_power_draw()
+        current_power = 0
+        #if current_power is not None:
+         # pass
+        if TICI:
+          current_power = HARDWARE.get_current_power_draw()
         elif HARDWARE.get_battery_status() == 'Discharging':
           # If the battery is discharging, we can use this measurement
           # On C2: this is low by about 10-15%, probably mostly due to UNO draw not being factored in
