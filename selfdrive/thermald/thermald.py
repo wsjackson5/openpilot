@@ -160,7 +160,7 @@ def check_car_battery_voltage(should_start, health, charging_disabled, msg):
   #   - 12V battery voltage is too low, and;
   #   - onroad isn't started
   print(health)
-  
+
   if charging_disabled and (health is None or health.health.voltage > 12500 and msg.thermal.batteryPercent < 40):
     charging_disabled = False
     os.system('echo "1" > /sys/class/power_supply/battery/charging_enabled')
@@ -363,6 +363,7 @@ def thermald_thread():
       set_offroad_alert_if_changed("Offroad_ConnectivityNeeded", False)
       set_offroad_alert_if_changed("Offroad_ConnectivityNeededPrompt", False)
 
+    startup_conditions["up_to_date"] = params.get("Offroad_ConnectivityNeeded") is None or params.get("DisableUpdates") == b"1"
     startup_conditions["not_uninstalling"] = not params.get("DoUninstall") == b"1"
     startup_conditions["accepted_terms"] = params.get("HasAcceptedTerms") == terms_version
 
@@ -411,7 +412,7 @@ def thermald_thread():
     else:
       msg.thermal.batteryStatus = "Charging"
 
-    
+
     msg.thermal.chargingDisabled = charging_disabled
     # Offroad power monitoring
     pm.calculate(health)
