@@ -56,7 +56,7 @@ def read_tz(x):
     return 0
 
   try:
-    with open("/sys/devices/virtual/thermal/thermal_zone%d/temp" % x) as f:
+    with open(f"/sys/devices/virtual/thermal/thermal_zone{x}/temp") as f:
       return int(f.read())
   except FileNotFoundError:
     return 0
@@ -184,7 +184,9 @@ def thermald_thread():
   health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
 
   # now loop
-  thermal_sock = messaging.pub_sock('thermal')
+  pm = messaging.PubMaster(['thermal'])
+
+  health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
   health_sock = messaging.sub_sock('health', timeout=health_timeout)
   location_sock = messaging.sub_sock('gpsLocation')
 
@@ -216,15 +218,13 @@ def thermald_thread():
   has_relay = False
 
   params = Params()
-  pm = PowerMonitoring()
+  power_monitor = PowerMonitoring()
   no_panda_cnt = 0
 
   thermal_config = get_thermal_config()
 
   while 1:
     health = messaging.recv_sock(health_sock, wait=True)
-    location = messaging.recv_sock(location_sock)
-    location = location.gpsLocation if location else None
     msg = read_thermal(thermal_config)
 
     if health is not None:
@@ -300,6 +300,7 @@ def thermald_thread():
     # If device is offroad we want to cool down before going onroad
     # since going onroad increases load and can make temps go over 107
     # We only do this if there is a relay that prevents the car from faulting
+    thermal_status = ThermalStatus.green # default to good condition
     is_offroad_for_5_min = (started_ts is None) and ((not started_seen) or (off_ts is None) or (sec_since_boot() - off_ts > 60 * 5))
     if max_cpu_temp > 107. or bat_temp >= 63. or (has_relay and is_offroad_for_5_min and max_cpu_temp > 70.0):
       # onroad not allowed
@@ -316,9 +317,7 @@ def thermald_thread():
     elif max_cpu_temp > 75.0:
       # hysteresis between uploader not allowed and all good
       thermal_status = clip(thermal_status, ThermalStatus.green, ThermalStatus.yellow)
-    else:
-      # all good
-      thermal_status = ThermalStatus.green
+
 
     # **** starting logic ****
 
@@ -387,6 +386,7 @@ def thermald_thread():
 
     #set_offroad_alert_if_changed("Offroad_HardwareUnsupported", health is not None and not startup_conditions["hardware_supported"])
 
+    # Handle offroad/onroad transition
     if should_start:
       if not should_start_prev:
         params.delete("IsOffroad")
@@ -415,15 +415,15 @@ def thermald_thread():
 
     msg.thermal.chargingDisabled = charging_disabled
     # Offroad power monitoring
-    pm.calculate(health)
-    msg.thermal.offroadPowerUsage = pm.get_power_used()
-    msg.thermal.carBatteryCapacity = max(0, pm.get_car_battery_capacity())
+    power_monitor.calculate(health)
+    msg.thermal.offroadPowerUsage = power_monitor.get_power_used()
+    msg.thermal.carBatteryCapacity = max(0, power_monitor.get_car_battery_capacity())
 
     # Check if we need to disable charging (handled by boardd)
-    msg.thermal.chargingDisabled = pm.should_disable_charging(health, off_ts)
+    msg.thermal.chargingDisabled = power_monitor.should_disable_charging(health, off_ts)
 
     # Check if we need to shut down
-    if pm.should_shutdown(health, off_ts, started_seen, LEON):
+    if power_monitor.should_shutdown(health, off_ts, started_seen, LEON):
       cloudlog.info(f"shutting device down, offroad since {off_ts}")
       # TODO: add function for blocking cloudlog instead of sleep
       time.sleep(10)
@@ -434,7 +434,7 @@ def thermald_thread():
     msg.thermal.startedTs = int(1e9*(started_ts or 0))
 
     msg.thermal.thermalStatus = thermal_status
-    thermal_sock.send(msg.to_bytes())
+    pm.send("thermal", msg)
 
     print(msg)
     set_offroad_alert_if_changed("Offroad_ChargeDisabled", (not usb_power))
@@ -444,10 +444,11 @@ def thermald_thread():
 
     # report to server once per minute
     if (count % int(60. / DT_TRML)) == 0:
+      location = messaging.recv_sock(location_sock)
       cloudlog.event("STATUS_PACKET",
                      count=count,
                      health=(health.to_dict() if health else None),
-                     location=(location.to_dict() if location else None),
+                     location=(location.gpsLocation.to_dict() if location else None),
                      thermal=msg.to_dict())
 
     count += 1
