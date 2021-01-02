@@ -181,8 +181,6 @@ def set_offroad_alert_if_changed(offroad_alert: str, show_alert: bool, extra_tex
 
 
 def thermald_thread():
-  health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
-
   # now loop
   pm = messaging.PubMaster(['thermal'])
 
