@@ -68,10 +68,20 @@ class CarState(CarStateBase):
     if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
       self.regen_pressed = bool(pt_cp.vl["EBCMRegenPaddle"]['RegenPaddle'])
 
+    brake_light_enable = False
+    if self.car_fingerprint == CAR.BOLT:
+      if ret.aEgo < -1.3:
+        brake_light_enable = True
+
+    ret.brakeLights = ret.brakePressed or self.regen_pressed or brake_light_enable
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]['LKATorqueDeliveredStatus']
     ret.steerWarning = self.lkas_status not in [0, 1]
 
+    if self.car_fingerprint == CAR.BOLT:
+      self.HVBvoltage = pt_cp.vl["BECMBatteryVoltageCurrent"]['HVBatteryVoltage']
+      self.HVBcurrent = pt_cp.vl["BECMBatteryVoltageCurrent"]['HVBatteryCurrent']
+      ret.hvBpower = self.HVBvoltage * self.HVBcurrent / 1000   #kW
     return ret
 
   @staticmethod
@@ -109,6 +119,8 @@ class CarState(CarStateBase):
     if CP.carFingerprint == CAR.VOLT or CP.carFingerprint == CAR.BOLT:
       signals += [
         ("RegenPaddle", "EBCMRegenPaddle", 0),
+        ("HVBatteryVoltage", "BECMBatteryVoltageCurrent", 0),
+        ("HVBatteryCurrent", "BECMBatteryVoltageCurrent", 0),
       ]
 
     return CANParser(DBC[CP.carFingerprint]['pt'], signals, [], CanBus.POWERTRAIN)
