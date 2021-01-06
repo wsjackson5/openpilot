@@ -1,7 +1,9 @@
+#include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
 #include <csignal>
+#include <cerrno>
 #include <android/log.h>
 
 //#include <log/log.h>
@@ -9,21 +11,14 @@
 #include <log/logprint.h>
 
 #include "common/timing.h"
+#include "common/utilpp.h"
 #include "messaging.hpp"
 
-volatile sig_atomic_t do_exit = 0;
-static void set_do_exit(int sig) {
-  do_exit = 1;
-}
-
+ExitHandler do_exit;
 int main() {
   int err;
 
-  // setup signal handlers
-  signal(SIGINT, (sighandler_t)set_do_exit);
-  signal(SIGTERM, (sighandler_t)set_do_exit);
-
-  struct logger_list *logger_list = android_logger_list_alloc(ANDROID_LOG_RDONLY, 0, 0);
+  struct logger_list *logger_list = android_logger_list_alloc(ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 0, 0);
   assert(logger_list);
   struct logger *main_logger = android_logger_open(logger_list, LOG_ID_MAIN);
   assert(main_logger);
@@ -40,7 +35,11 @@ int main() {
   while (!do_exit) {
     log_msg log_msg;
     err = android_logger_list_read(logger_list, &log_msg);
-    if (err <= 0) {
+
+    if (err == -EAGAIN) {
+      usleep(500 * 1000);
+      continue;
+    } else if (err <= 0) {
       break;
     }
 
@@ -64,5 +63,6 @@ int main() {
   }
 
   android_logger_list_close(logger_list);
+  android_logger_list_free(logger_list);
   return 0;
 }

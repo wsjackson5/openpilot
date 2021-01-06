@@ -21,6 +21,7 @@
 #include "msm_cam_sensor.h"
 
 #include "common/util.h"
+#include "common/utilpp.h"
 #include "common/timing.h"
 #include "common/swaglog.h"
 #include "common/params.h"
@@ -33,7 +34,7 @@
 #include "camera_qcom.h"
 
 
-extern volatile sig_atomic_t do_exit;
+extern ExitHandler do_exit;
 
 // global var for AE/AF ops
 std::atomic<CameraExpInfo> rear_exp{{0}};
@@ -1986,10 +1987,10 @@ const char* get_isp_event_name(unsigned int type) {
 
 static FrameMetadata get_frame_metadata(CameraState *s, uint32_t frame_id) {
   pthread_mutex_lock(&s->frame_info_lock);
-  for (int i=0; i<METADATA_BUF_COUNT; i++) {
-    if (s->frame_metadata[i].frame_id == frame_id) {
+  for (auto &i : s->frame_metadata) {
+    if (i.frame_id == frame_id) {
       pthread_mutex_unlock(&s->frame_info_lock);
-      return s->frame_metadata[i];
+      return i;
     }
   }
   pthread_mutex_unlock(&s->frame_info_lock);
@@ -2025,7 +2026,7 @@ static void* ops_thread(void* arg) {
       front_op_id_last = front_op.op_id;
     }
 
-    usleep(50000);
+    util::sleep_for(50);
   }
 
   return NULL;

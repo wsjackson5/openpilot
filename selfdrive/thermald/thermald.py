@@ -181,7 +181,7 @@ def set_offroad_alert_if_changed(offroad_alert: str, show_alert: bool, extra_tex
 
 
 def thermald_thread():
-  # now loop
+
   pm = messaging.PubMaster(['thermal'])
 
   health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
@@ -434,7 +434,6 @@ def thermald_thread():
     msg.thermal.thermalStatus = thermal_status
     pm.send("thermal", msg)
 
-    print(msg)
     set_offroad_alert_if_changed("Offroad_ChargeDisabled", (not usb_power))
 
     should_start_prev = should_start

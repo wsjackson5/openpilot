@@ -6,6 +6,16 @@ from selfdrive.car import dbc_dict
 Ecu = car.CarParams.Ecu
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
+class CarControllerParams():
+  def __init__(self, CP):
+      self.BRAKE_MAX = 1024//4
+      self.STEER_MAX = CP.lateralParams.torqueBP[-1]
+      # mirror of list (assuming first item is zero) for interp of signed request values
+      assert(CP.lateralParams.torqueBP[0] == 0)
+      assert(CP.lateralParams.torqueBP[0] == 0)
+      self.STEER_LOOKUP_BP = [v * -1 for v in CP.lateralParams.torqueBP][1:][::-1] + list(CP.lateralParams.torqueBP)
+      self.STEER_LOOKUP_V = [v * -1 for v in CP.lateralParams.torqueV][1:][::-1] + list(CP.lateralParams.torqueV)
+
 # Car button codes
 class CruiseButtons:
   RES_ACCEL = 4
@@ -440,6 +450,8 @@ FW_VERSIONS = {
       b'37805-5AN-AJ30\x00\x00',
       b'37805-5AN-AK20\x00\x00',
       b'37805-5AN-AR20\x00\x00',
+      b'37805-5AN-CH20\x00\x00',
+      b'37805-5AN-L840\x00\x00',
       b'37805-5AN-L940\x00\x00',
       b'37805-5AN-LF20\x00\x00',
       b'37805-5AN-LH20\x00\x00',
@@ -978,6 +990,8 @@ FW_VERSIONS = {
       b'78109-TXM-A010\x00\x00',
       b'78109-TXM-A020\x00\x00',
       b'78109-TXM-A110\x00\x00',
+      b'78109-TXM-C010\x00\x00',
+      b'78109-TXM-A030\x00\x00',
     ],
   },
   CAR.HRV: {
