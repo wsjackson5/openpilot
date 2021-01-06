@@ -134,8 +134,10 @@ typedef struct UIScene {
   track_vertices_data track_vertices;
   line_vertices_data lane_line_vertices[4];
   line_vertices_data road_edge_vertices[2];
-  
+
   //kegman UI
+  int lead_status;
+  float lead_d_rel, lead_v_rel;
   float angleSteers;
   bool brakeLights;
   float angleSteersDes;
@@ -152,7 +154,7 @@ typedef struct UIScene {
 
   bool leftBlinker;
   bool rightBlinker;
-  int blinker_blinkingrate;  
+  int blinker_blinkingrate;
 } UIScene;
 
 typedef struct UIState {
