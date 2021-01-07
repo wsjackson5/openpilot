@@ -260,6 +260,30 @@ static void ui_draw_vision_maxspeed(UIState *s) {
 static void ui_draw_vision_speed(UIState *s) {
   const float speed = std::max(0.0, s->scene.controls_state.getVEgo() * (s->is_metric ? 3.6 : 2.2369363));
   const std::string speed_str = std::to_string((int)std::nearbyint(speed));
+  //Blinker
+  if(s->scene.leftBlinker) {
+    nvgBeginPath(s->vg);
+    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() - 140, box_y + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 280, box_y + header_h/4 + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 140, box_y + header_h/2 + header_h/4);
+    nvgClosePath(s->vg);
+    nvgFillColor(s->vg, nvgRGBA(23,134,68,s->scene.blinker_blinkingrate>=50?210:60));
+    nvgFill(s->vg);
+  }
+  if(s->scene.rightBlinker) {
+    nvgBeginPath(s->vg);
+    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() + 140, box_y + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 280, box_y + header_h/4 + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 140, box_y + header_h/2 + header_h/4);
+    nvgClosePath(s->vg);
+    nvgFillColor(s->vg, nvgRGBA(23,134,68,s->scene.blinker_blinkingrate>=50?210:60));
+    nvgFill(s->vg);
+  }
+  if(s->scene.leftBlinker || s->scene.rightBlinker) {
+    s->scene.blinker_blinkingrate -= 3;
+    if(s->scene.blinker_blinkingrate<0) s->scene.blinker_blinkingrate = 120;
+  }
+
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
   ui_draw_text(s->vg, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_WHITE, s->font_sans_bold);
   ui_draw_text(s->vg, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_WHITE_ALPHA(200), s->font_sans_regular);
