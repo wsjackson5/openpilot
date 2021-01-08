@@ -316,7 +316,6 @@ def thermald_thread():
       # hysteresis between uploader not allowed and all good
       thermal_status = clip(thermal_status, ThermalStatus.green, ThermalStatus.yellow)
 
-
     # **** starting logic ****
 
     # Check for last update time and display alerts if needed
