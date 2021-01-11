@@ -326,7 +326,7 @@ static void ui_draw_vision_brake(UIState *s) {
 static void ui_draw_driver_view(UIState *s) {
   s->scene.sidebar_collapsed = true;
   const bool is_rhd = s->scene.is_rhd;
-  const Rect &viz_rect = s->scene.viz_rect; 
+  const Rect &viz_rect = s->scene.viz_rect;
   const int width = 3 * viz_rect.w / 4;
   const Rect rect = {viz_rect.centerX() - width / 2, viz_rect.y, width, viz_rect.h};  // x, y, w, h
   const Rect valid_rect = {is_rhd ? rect.right() - rect.h / 2 : rect.x, rect.y, rect.h / 2, rect.h};
@@ -365,7 +365,7 @@ static void ui_draw_driver_view(UIState *s) {
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = (rect.x + (rect.w - 4 * rect.h / 3 + 32) + (brake_size * 5) + (bdr_is * 2.5) + 200);
+  const int x2 = (rect.x + ((rect.w - 4 * rect.h / 3) / 2 + 32) + (brake_size * 5) + (bdr_is * 2.5) + 200);
   const int y2 = (rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5));
   ui_draw_circle_image(s->vg, x2, y2+border_shifter+25, brake_size-5, s->img_brake, s->scene.brakeLights);
 }
