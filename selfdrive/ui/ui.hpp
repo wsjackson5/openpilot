@@ -19,12 +19,13 @@
 #include "nanovg.h"
 
 #include "common/mat.h"
-#include "common/visionipc.h"
 #include "common/visionimg.h"
 #include "common/framebuffer.h"
 #include "common/modeldata.h"
 #include "common/params.h"
 #include "sound.hpp"
+#include "visionipc.h"
+#include "visionipc_client.h"
 
 #define COLOR_BLACK nvgRGBA(0, 0, 0, 255)
 #define COLOR_BLACK_ALPHA(x) nvgRGBA(0, 0, 0, x)
@@ -38,6 +39,7 @@
 typedef struct Rect {
   int x, y, w, h;
   int centerX() const { return x + w / 2; }
+  int centerY() const { return y + h / 2; }
   int right() const { return x + w; }
   int bottom() const { return y + h; }
   bool ptInRect(int px, int py) const {
@@ -116,6 +118,7 @@ typedef struct UIScene {
   std::string alert_text1;
   std::string alert_text2;
   std::string alert_type;
+  float alert_blinking_rate;
   cereal::ControlsState::AlertSize alert_size;
 
   cereal::HealthData::HwType hwType;
@@ -158,6 +161,9 @@ typedef struct UIScene {
 } UIScene;
 
 typedef struct UIState {
+  VisionIpcClient * vipc_client;
+  VisionBuf * last_frame;
+
   // framebuffer
   FramebufferState *fb;
   int fb_w, fb_h;
@@ -186,10 +192,6 @@ typedef struct UIState {
   UIScene scene;
   cereal::UiLayoutState::App active_app;
 
-  // vision state
-  bool vision_connected;
-  VisionStream stream;
-
   // graphics
   GLuint frame_program;
   GLuint frame_texs[UI_BUF_COUNT];
@@ -210,9 +212,6 @@ typedef struct UIState {
   bool is_metric;
   bool longitudinal_control;
   uint64_t started_frame;
-
-  bool alert_blinked;
-  float alert_blinking_alpha;
 
   Rect video_rect;
 } UIState;

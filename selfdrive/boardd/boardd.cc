@@ -21,7 +21,6 @@
 #include "cereal/gen/cpp/car.capnp.h"
 
 #include "common/util.h"
-#include "common/utilpp.h"
 #include "common/params.h"
 #include "common/swaglog.h"
 #include "common/timing.h"
@@ -351,8 +350,15 @@ void can_health_thread() {
 
     // set fields
     healthData.setUptime(health.uptime);
+
+#ifdef QCOM2
+    healthData.setVoltage(std::stoi(util::read_file("/sys/class/hwmon/hwmon1/in1_input")));
+    healthData.setCurrent(std::stoi(util::read_file("/sys/class/hwmon/hwmon1/curr1_input")));
+#else
     healthData.setVoltage(health.voltage);
     healthData.setCurrent(health.current);
+#endif
+
     healthData.setIgnitionLine(health.ignition_line);
     healthData.setIgnitionCan(health.ignition_can);
     healthData.setControlsAllowed(health.controls_allowed);
