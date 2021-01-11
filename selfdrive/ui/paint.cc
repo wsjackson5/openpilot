@@ -263,18 +263,18 @@ static void ui_draw_vision_speed(UIState *s) {
   //Blinker
   if(s->scene.leftBlinker) {
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() - 140, box_y + header_h/4);
-    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 280, box_y + header_h/4 + header_h/4);
-    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 140, box_y + header_h/2 + header_h/4);
+    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() - 140, s->scene.viz_rect.y + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 280, s->scene.viz_rect.y + header_h/4 + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() - 140, s->scene.viz_rect.y + header_h/2 + header_h/4);
     nvgClosePath(s->vg);
     nvgFillColor(s->vg, nvgRGBA(23,134,68,s->scene.blinker_blinkingrate>=50?210:60));
     nvgFill(s->vg);
   }
   if(s->scene.rightBlinker) {
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() + 140, box_y + header_h/4);
-    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 280, box_y + header_h/4 + header_h/4);
-    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 140, box_y + header_h/2 + header_h/4);
+    nvgMoveTo(s->vg, s->scene.viz_rect.centerX() + 140, s->scene.viz_rect.y + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 280, s->scene.viz_rect.y + header_h/4 + header_h/4);
+    nvgLineTo(s->vg, s->scene.viz_rect.centerX() + 140, s->scene.viz_rect.y + header_h/2 + header_h/4);
     nvgClosePath(s->vg);
     nvgFillColor(s->vg, nvgRGBA(23,134,68,s->scene.blinker_blinkingrate>=50?210:60));
     nvgFill(s->vg);
@@ -359,14 +359,14 @@ static void ui_draw_driver_view(UIState *s) {
 
   // draw face icon
   const int face_size = 85;
-  const icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 : rect.x + face_size + bdr_s * 2;
-  const icon_y = rect.bottom() - face_size - bdr_s * 2.5;
-  ui_draw_circle_image(s->vg, icon_x, icon_y+border_shifter+25, face_size-5, s->img_face, face_detected);
+  const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 : rect.x + face_size + bdr_s * 2;
+  const int icon_y = rect.bottom() - face_size - bdr_s * 2.5;
+  ui_draw_circle_image(s->vg, icon_x, icon_y + border_shifter + 25, face_size-5, s->img_face, face_detected);
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = (valid_frame_x + (brake_size * 5) + (bdr_is * 2.5) + 200);
-  const int y2 = (box_y + box_h - brake_size - bdr_s - (bdr_s * 1.5));
+  const int x2 = (rect.x + (rect.w - 4 * rect.h / 3 + 32) + (brake_size * 5) + (bdr_is * 2.5) + 200);
+  const int y2 = (rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5));
   ui_draw_circle_image(s->vg, x2, y2+border_shifter+25, brake_size-5, s->img_brake, s->scene.brakeLights);
 }
 
