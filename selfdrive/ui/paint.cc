@@ -164,11 +164,11 @@ static void draw_frame(UIState *s) {
   glActiveTexture(GL_TEXTURE0);
 
   if (s->last_frame) {
-    glBindTexture(GL_TEXTURE_2D, s->frame_texs[s->last_frame->idx]);
+    glBindTexture(GL_TEXTURE_2D, s->texture[s->last_frame->idx]->frame_tex);
 #ifndef QCOM
     // this is handled in ion on QCOM
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->last_frame->width, s->last_frame->height,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, s->priv_hnds[s->last_frame->idx]);
+                 0, GL_RGB, GL_UNSIGNED_BYTE, s->last_frame->addr);
 #endif
   }
 
@@ -326,7 +326,7 @@ static void ui_draw_vision_brake(UIState *s) {
 static void ui_draw_driver_view(UIState *s) {
   s->scene.sidebar_collapsed = true;
   const bool is_rhd = s->scene.is_rhd;
-  const Rect &viz_rect = s->scene.viz_rect;
+  const Rect &viz_rect = s->scene.viz_rect; 
   const int width = 3 * viz_rect.w / 4;
   const Rect rect = {viz_rect.centerX() - width / 2, viz_rect.y, width, viz_rect.h};  // x, y, w, h
   const Rect valid_rect = {is_rhd ? rect.right() - rect.h / 2 : rect.x, rect.y, rect.h / 2, rect.h};
@@ -1001,9 +1001,4 @@ void ui_nvg_init(UIState *s) {
 
   s->front_frame_mat = matmul(device_transform, full_to_wide_frame_transform);
   s->rear_frame_mat = matmul(device_transform, frame_transform);
-
-  for(int i = 0; i < UI_BUF_COUNT; i++) {
-    s->khr[i] = 0;
-    s->priv_hnds[i] = NULL;
-  }
 }
