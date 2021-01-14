@@ -14,7 +14,7 @@ class LatControlPID():
                                 sat_limit=CP.steerLimitTimer)
     self.angle_steers_des = 0.
     self.angle_steers_des_last = 0.
-    self.angle_steer_rate = [0.6, 1.0]
+    self.angle_steer_rate = [0.5, 1.0]
     self.angleBP = [10., 25.]
     self.angle_steer_new = 0.0
 
@@ -33,7 +33,7 @@ class LatControlPID():
     else:
       self.angle_steers_des = path_plan.angleSteers  # get from MPC/PathPlanner
       self.angle_steer_new = interp(CS.vEgo, self.angleBP, self.angle_steer_rate)
-      check_pingpong = abs(self.angle_steers_des - self.angle_steers_des_last) > 4.0
+      check_pingpong = abs(self.angle_steers_des - self.angle_steers_des_last) > 3.0
       if check_pingpong:
         self.angle_steers_des = path_plan.angleSteers * self.angle_steer_new
 
