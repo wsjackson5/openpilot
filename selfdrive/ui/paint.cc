@@ -18,7 +18,6 @@
 #include "nanovg_gl_utils.h"
 #include "paint.hpp"
 #include "sidebar.hpp"
-int border_shifter = 20; //Use this to move elements around depending on how much bdr_s is changed -wirelessnet2
 
 
 // TODO: this is also hardcoded in common/transformations/camera.py
@@ -231,12 +230,12 @@ static void ui_draw_vision_maxspeed(UIState *s) {
   ui_draw_rect(s->vg, rect, COLOR_WHITE_ALPHA(100), 10, 20.);
 
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-  ui_draw_text(s, rect.centerX(), 148-border_shifter, "MAX", 26 * 2.5, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans_regular");
+  ui_draw_text(s, rect.centerX(), 148, "MAX", 26 * 2.5, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-regular");
   if (is_cruise_set) {
     const std::string maxspeed_str = std::to_string((int)std::nearbyint(maxspeed));
-    ui_draw_text(s, rect.centerX(), 242-border_shifter, maxspeed_str.c_str(), 48 * 2.5, COLOR_WHITE, "sans_bold");
+    ui_draw_text(s, rect.centerX(), 242, maxspeed_str.c_str(), 48 * 2.5, COLOR_WHITE, "sans-bold");
   } else {
-    ui_draw_text(s, rect.centerX(), 242-border_shifter, "-", 42 * 2.5, COLOR_WHITE_ALPHA(100), "sans_semibold");
+    ui_draw_text(s, rect.centerX(), 242, "-", 42 * 2.5, COLOR_WHITE_ALPHA(100), "sans-semibold");
   }
 }
 
@@ -274,16 +273,16 @@ static void ui_draw_vision_speed(UIState *s) {
 
 static void ui_draw_vision_event(UIState *s) {
   const int viz_event_w = 220;
-  const int viz_event_x = s->scene.viz_rect.right() - (viz_event_w + bdr_is*2);
-  const int viz_event_y = s->scene.viz_rect.y + (bdr_is*1.5);
+  const int viz_event_x = s->scene.viz_rect.right() - (viz_event_w + bdr_s*2);
+  const int viz_event_y = s->scene.viz_rect.y + (bdr_s*1.5);
   if (s->scene.controls_state.getDecelForModel() && s->scene.controls_state.getEnabled()) {
     // draw winding road sign
-    const int img_turn_size = 160*1.5*0.82;
-    const Rect rect = {viz_event_x - (img_turn_size / 4)+80, viz_event_y + bdr_is - 45, img_turn_size, img_turn_size};
+    const int img_turn_size = 160*1.5;
+    const Rect rect = {viz_event_x - (img_turn_size / 4), viz_event_y + bdr_s - 25, img_turn_size, img_turn_size};
     ui_draw_image(s, rect, "trafficSign_turn", 1.0f);
   } else if (s->scene.controls_state.getEngageable()) {
     // draw steering wheel
-    const int bg_wheel_size = 90; //I made the wheel a bit smaller -wirelessnet2
+    const int bg_wheel_size = 96;
     const int bg_wheel_x = viz_event_x + (viz_event_w-bg_wheel_size);
     const int bg_wheel_y = viz_event_y + (bg_wheel_size/2);
     const NVGcolor color = bg_colors[s->status];
@@ -293,23 +292,23 @@ static void ui_draw_vision_event(UIState *s) {
 }
 
 static void ui_draw_vision_face(UIState *s) {
-  const int face_size = 80; //Made the DM Face a bit smaller -wirelessnet2
-  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_is * 2));
+  const int face_size = 96;
+  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 2));
   const int face_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - face_size) / 2));
-  ui_draw_circle_image(s, face_x, face_y+border_shifter+25, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
+  ui_draw_circle_image(s, face_x, face_y, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
 }
 
 static void ui_draw_vision_brake(UIState *s) {
-  const int brake_size = 80;
-  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_is * 2) + 255); //That 55 is kinda random -wirelessnet2
+  const int brake_size = 96;
+  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 2) + 255); //That 55 is kinda random -wirelessnet2
   const int brake_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - brake_size) / 2));
-  ui_draw_circle_image(s, brake_x, brake_y+border_shifter+25, brake_size, "brake_img", s->scene.brakeLights);
+  ui_draw_circle_image(s, brake_x, brake_y, brake_size, "brake_img", s->scene.brakeLights);
 }
 
 static void ui_draw_driver_view(UIState *s) {
   s->scene.sidebar_collapsed = true;
   const bool is_rhd = s->scene.is_rhd;
-  const Rect &viz_rect = s->scene.viz_rect; 
+  const Rect &viz_rect = s->scene.viz_rect;
   const int width = 3 * viz_rect.w / 4;
   const Rect rect = {viz_rect.centerX() - width / 2, viz_rect.y, width, viz_rect.h};  // x, y, w, h
   const Rect valid_rect = {is_rhd ? rect.right() - rect.h / 2 : rect.x, rect.y, rect.h / 2, rect.h};
@@ -344,13 +343,13 @@ static void ui_draw_driver_view(UIState *s) {
   const int face_size = 85;
   const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 : rect.x + face_size + bdr_s * 2;
   const int icon_y = rect.bottom() - face_size - bdr_s * 2.5;
-  ui_draw_circle_image(s, icon_x, icon_y + border_shifter + 25, face_size-5, "driver_face", face_detected);
+  ui_draw_circle_image(s, icon_x, icon_y, face_size, "driver_face", face_detected);
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = (rect.x + ((rect.w - 4 * rect.h / 3) / 2 + 32) + (brake_size * 5) + (bdr_is * 2.5) + 200);
+  const int x2 = (rect.x + ((rect.w - 4 * rect.h / 3) / 2 + 32) + (brake_size * 5) + (bdr_s * 2.5) + 200);
   const int y2 = (rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5));
-  ui_draw_circle_image(s, x2, y2+border_shifter+25, brake_size-5, "brake_img", s->scene.brakeLights);
+  ui_draw_circle_image(s, x2, y2, brake_size, "brake_img", s->scene.brakeLights);
 }
 
 static void ui_draw_vision_header(UIState *s) {
@@ -666,12 +665,12 @@ static void bb_ui_draw_UI(UIState *s)
 {
   //const UIScene *scene = &s->scene;
   const int bb_dml_w = 180;
-  const int bb_dml_x = (s->scene.viz_rect.x + (bdr_is * 2));
-  const int bb_dml_y = (s->scene.viz_rect.y  + (bdr_is * 1.5)) + 220;
+  const int bb_dml_x = (s->scene.viz_rect.x + 60);
+  const int bb_dml_y = (s->scene.viz_rect.y  + 45) + 220;
 
   const int bb_dmr_w = 180;
-  const int bb_dmr_x = s->scene.viz_rect.x + s->scene.viz_rect.w - bb_dmr_w - (bdr_is * 2);
-  const int bb_dmr_y = (s->scene.viz_rect.y + (bdr_is * 1.5)) + 220;
+  const int bb_dmr_x = s->scene.viz_rect.x + s->scene.viz_rect.w - bb_dmr_w - 60;
+  const int bb_dmr_y = (s->scene.viz_rect.y + 45) + 220;
 
   bb_ui_draw_measures_right(s, bb_dml_x, bb_dml_y, bb_dml_w);
   bb_ui_draw_measures_left(s, bb_dmr_x, bb_dmr_y-20, bb_dmr_w);
@@ -683,6 +682,7 @@ static void ui_draw_vision_footer(UIState *s) {
   ui_draw_vision_brake(s);
   bb_ui_draw_UI(s);
 }
+
 static float get_alert_alpha(float blink_rate) {
   return 0.375 * cos((millis_since_boot() / 1000) * 2 * M_PI * blink_rate) + 0.625;
 }
@@ -697,14 +697,14 @@ static void ui_draw_vision_alert(UIState *s) {
 
   NVGcolor color = bg_colors[s->status];
   color.a *= get_alert_alpha(scene->alert_blinking_rate);
-  const int alr_h = alert_size_map[scene->alert_size] + bdr_is;
-  const Rect rect = {.x = scene->viz_rect.x - bdr_is,
+  const int alr_h = alert_size_map[scene->alert_size] + bdr_s;
+  const Rect rect = {.x = scene->viz_rect.x - bdr_s,
                   .y = s->fb_h - alr_h,
-                  .w = scene->viz_rect.w + (bdr_is * 2),
+                  .w = scene->viz_rect.w + (bdr_s * 2),
                   .h = alr_h};
 
   ui_fill_rect(s->vg, rect, color);
-  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(), 
+  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(),
                                             nvgRGBAf(0.0, 0.0, 0.0, 0.05), nvgRGBAf(0.0, 0.0, 0.0, 0.35)));
 
   nvgFillColor(s->vg, COLOR_WHITE);
@@ -880,7 +880,6 @@ void ui_nvg_init(UIState *s) {
 #else
   s->vg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 #endif
-
   assert(s->vg);
 
   // init fonts
@@ -902,9 +901,7 @@ void ui_nvg_init(UIState *s) {
       {"button_settings", "../assets/images/button_settings.png"},
       {"button_home", "../assets/images/button_home.png"},
       {"battery", "../assets/images/battery.png"},
-	  
 	  {"brake_img", "../assets/img_brake_disc.png"},
-	  
       {"battery_charging", "../assets/images/battery_charging.png"},
       {"network_0", "../assets/images/network_0.png"},
       {"network_1", "../assets/images/network_1.png"},
