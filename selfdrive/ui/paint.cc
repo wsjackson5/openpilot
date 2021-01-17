@@ -220,25 +220,6 @@ static void ui_draw_world(UIState *s) {
   nvgResetScissor(s->vg);
 }
 
-static void ui_draw_vision_maxspeed(UIState *s) {
-  float maxspeed = s->scene.controls_state.getVCruise();
-  const bool is_cruise_set = maxspeed != 0 && maxspeed != SET_SPEED_NA;
-  if (is_cruise_set && !s->is_metric) { maxspeed *= 0.6225; }
-
-  const Rect rect = {s->scene.viz_rect.x + (bdr_s * 2), int(s->scene.viz_rect.y + (bdr_s * 1.5)), 184, 202};
-  ui_fill_rect(s->vg, rect, COLOR_BLACK_ALPHA(100), 30.);
-  ui_draw_rect(s->vg, rect, COLOR_WHITE_ALPHA(100), 10, 20.);
-
-  nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-  ui_draw_text(s, rect.centerX(), 148, "MAX", 26 * 2.5, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-regular");
-  if (is_cruise_set) {
-    const std::string maxspeed_str = std::to_string((int)std::nearbyint(maxspeed));
-    ui_draw_text(s, rect.centerX(), 242, maxspeed_str.c_str(), 48 * 2.5, COLOR_WHITE, "sans-bold");
-  } else {
-    ui_draw_text(s, rect.centerX(), 242, "-", 42 * 2.5, COLOR_WHITE_ALPHA(100), "sans-semibold");
-  }
-}
-
 static void ui_draw_vision_speed(UIState *s) {
   const float speed = std::max(0.0, s->scene.controls_state.getVEgo() * (s->is_metric ? 3.6 : 2.2369363));
   const std::string speed_str = std::to_string((int)std::nearbyint(speed));
@@ -267,24 +248,39 @@ static void ui_draw_vision_speed(UIState *s) {
   }
 
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-  ui_draw_text(s, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_WHITE, "sans-bold");
-  ui_draw_text(s, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_WHITE_ALPHA(200), "sans-regular");
+
+  if (s->scene.controls_state.getEnabled()) {
+    if (s->scene.controls_state.getVEgo() < 30.5) {
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_GREEN_SPEED, "sans-bold");
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_GREEN_SPEED, "sans-regular");
+    } else if ((s->scene.controls_state.getVEgo() >= 30.5) & (s->scene.controls_state.getVEgo() < 33.3)) {
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_YELLOW_SPEED, "sans-bold");
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_YELLOW_SPEED, "sans-regular");
+    } else {
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_RED_SPEED, "sans-bold");
+      ui_draw_text(s, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_RED_SPEED, "sans-regular");
+    }
+  }
+    else {
+    ui_draw_text(s, s->scene.viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_WHITE, "sans-bold");
+    ui_draw_text(s, s->scene.viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_WHITE_ALPHA(200), "sans-regular");
+  }
 }
 
 static void ui_draw_vision_event(UIState *s) {
   const int viz_event_w = 220;
-  const int viz_event_x = s->scene.viz_rect.right() - (viz_event_w + bdr_s*2);
-  const int viz_event_y = s->scene.viz_rect.y + (bdr_s*1.5);
+  const int viz_event_x = s->scene.viz_rect.right() - (viz_event_w + bdr_s * 6);
+  const int viz_event_y = s->scene.viz_rect.y + (bdr_s * 4.5);
   if (s->scene.controls_state.getDecelForModel() && s->scene.controls_state.getEnabled()) {
     // draw winding road sign
-    const int img_turn_size = 160*1.5;
-    const Rect rect = {viz_event_x - (img_turn_size / 4), viz_event_y + bdr_s - 25, img_turn_size, img_turn_size};
+    const int img_turn_size = 160 * 1.5;
+    const Rect rect = {viz_event_x - (img_turn_size / 4) + 80, viz_event_y + bdr_s - 25, img_turn_size, img_turn_size};
     ui_draw_image(s, rect, "trafficSign_turn", 1.0f);
   } else if (s->scene.controls_state.getEngageable()) {
     // draw steering wheel
     const int bg_wheel_size = 96;
-    const int bg_wheel_x = viz_event_x + (viz_event_w-bg_wheel_size);
-    const int bg_wheel_y = viz_event_y + (bg_wheel_size/2);
+    const int bg_wheel_x = viz_event_x + (viz_event_w - bg_wheel_size);
+    const int bg_wheel_y = viz_event_y + ((bg_wheel_size - 6) / 2);
     const NVGcolor color = bg_colors[s->status];
 
     ui_draw_circle_image(s, bg_wheel_x, bg_wheel_y, bg_wheel_size, "wheel", color, 1.0f, bg_wheel_y - 25);
@@ -293,16 +289,16 @@ static void ui_draw_vision_event(UIState *s) {
 
 static void ui_draw_vision_face(UIState *s) {
   const int face_size = 96;
-  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 2));
-  const int face_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - face_size) / 2));
+  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 6));
+  const int face_y = (s->scene.viz_rect.y + face_size + (bdr_s * 4.5));
   ui_draw_circle_image(s, face_x, face_y, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
 }
 
 static void ui_draw_vision_brake(UIState *s) {
   const int brake_size = 96;
-  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 2) + 255); //That 55 is kinda random -wirelessnet2
+  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 6)); //That 55 is kinda random -wirelessnet2
   const int brake_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - brake_size) / 2));
-  ui_draw_circle_image(s, brake_x, brake_y, brake_size, "brake_img", s->scene.brakeLights);
+  ui_draw_circle_image(s, brake_x, brake_y + 45, brake_size, "brake_img", s->scene.brakeLights);
 }
 
 static void ui_draw_driver_view(UIState *s) {
@@ -341,15 +337,15 @@ static void ui_draw_driver_view(UIState *s) {
 
   // draw face icon
   const int face_size = 85;
-  const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 : rect.x + face_size + bdr_s * 2;
-  const int icon_y = rect.bottom() - face_size - bdr_s * 2.5;
+  const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 6 : rect.x + face_size + bdr_s * 6;
+  const int icon_y = rect.y + face_size + bdr_s * 4.5;
   ui_draw_circle_image(s, icon_x, icon_y, face_size, "driver_face", face_detected);
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = (rect.x + ((rect.w - 4 * rect.h / 3) / 2 + 32) + (brake_size * 5) + (bdr_s * 2.5) + 200);
-  const int y2 = (rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5));
-  ui_draw_circle_image(s, x2, y2, brake_size, "brake_img", s->scene.brakeLights);
+  const int x2 = rect.x + brake_size + (bdr_s * 7.5);
+  const int y2 = rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5);
+  ui_draw_circle_image(s, x2, y2 + 45, brake_size, "brake_img", s->scene.brakeLights);
 }
 
 static void ui_draw_vision_header(UIState *s) {
@@ -361,7 +357,6 @@ static void ui_draw_vision_header(UIState *s) {
 
   ui_fill_rect(s->vg, {viz_rect.x, viz_rect.y, viz_rect.w, header_h}, gradient);
 
-  ui_draw_vision_maxspeed(s);
   ui_draw_vision_speed(s);
   ui_draw_vision_event(s);
 }
