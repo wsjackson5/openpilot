@@ -278,7 +278,7 @@ static void ui_draw_vision_event(UIState *s) {
     ui_draw_image(s, rect, "trafficSign_turn", 1.0f);
   } else if (s->scene.controls_state.getEngageable()) {
     // draw steering wheel
-    const int bg_wheel_size = 96;
+    const int bg_wheel_size = 90;
     const int bg_wheel_x = viz_event_x + (viz_event_w - bg_wheel_size);
     const int bg_wheel_y = viz_event_y + (bg_wheel_size / 2);
     const NVGcolor color = bg_colors[s->status];
@@ -288,16 +288,16 @@ static void ui_draw_vision_event(UIState *s) {
 }
 
 static void ui_draw_vision_face(UIState *s) {
-  const int face_size = 80;
-  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 6));
-  const int face_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - face_size) / 2));
+  const int face_size = 85;
+  const int face_x = s->scene.viz_rect.x + face_size + (bdr_s * 6);
+  const int face_y = s->scene.viz_rect.bottom() + footer_h + face_size - (bdr_s * 4.5);
   ui_draw_circle_image(s, face_x, face_y + 45, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
 }
 
 static void ui_draw_vision_brake(UIState *s) {
-  const int brake_size = 80;
-  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 6) + 255); //That 55 is kinda random -wirelessnet2
-  const int brake_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - brake_size) / 2));
+  const int brake_size = 85;
+  const int brake_x = s->scene.viz_rect.x + brake_size + (bdr_s * 7.5) + 200;
+  const int brake_y = s->scene.viz_rect.bottom() + footer_h - brake_size - bdr_s - (bdr_s * 1.5);
   ui_draw_circle_image(s, brake_x, brake_y + 45, brake_size, "brake_img", s->scene.brakeLights);
 }
 
