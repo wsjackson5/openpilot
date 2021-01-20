@@ -289,14 +289,14 @@ static void ui_draw_vision_event(UIState *s) {
 
 static void ui_draw_vision_face(UIState *s) {
   const int face_size = 96;
-  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 2));
+  const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 2) + 255);
   const int face_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - face_size) / 2));
   ui_draw_circle_image(s, face_x, face_y, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
 }
 
 static void ui_draw_vision_brake(UIState *s) {
   const int brake_size = 96;
-  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 2) + 255);
+  const int brake_x = (s->scene.viz_rect.x + brake_size + (bdr_s * 2) + 510);
   const int brake_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - brake_size) / 2));
   ui_draw_circle_image(s, brake_x, brake_y, brake_size, "brake_img", s->scene.brakeLights);
 }
@@ -337,13 +337,13 @@ static void ui_draw_driver_view(UIState *s) {
 
   // draw face icon
   const int face_size = 85;
-  const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 : rect.x + face_size + bdr_s *2;
+  const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 - 200 : rect.x + face_size + bdr_s * 2 + 200;
   const int icon_y = rect.y + rect.h - face_size - (bdr_s * 2.5);
   ui_draw_circle_image(s, icon_x, icon_y, face_size, "driver_face", face_detected);
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = rect.x + brake_size + (bdr_s * 2.5) + 200;
+  const int x2 = rect.x + brake_size + (bdr_s * 2.5) + 400;
   const int y2 = rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5);
   ui_draw_circle_image(s, x2, y2, brake_size, "brake_img", s->scene.brakeLights);
 }
