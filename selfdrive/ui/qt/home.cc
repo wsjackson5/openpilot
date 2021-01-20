@@ -243,9 +243,18 @@ void GLWindow::backlightUpdate() {
 }
 
 void GLWindow::timerUpdate() {
+  // Connecting to visionIPC requires opengl to be current
+  if (!ui_state.vipc_client->connected){
+    makeCurrent();
+  }
+
   if (ui_state.started != onroad) {
     onroad = ui_state.started;
     emit offroadTransition(!onroad);
+
+    // Change timeout to 0 when onroad, this will call timerUpdate continously.
+    // This puts visionIPC in charge of update frequency, reducing video latency
+    timer->start(onroad ? 0 : 1000 / UI_FREQ);
   }
 
   handle_display_state(&ui_state, false);
@@ -262,7 +271,6 @@ void GLWindow::paintGL() {
   if(GLWindow::ui_state.awake){
     ui_draw(&ui_state);
   }
-
 }
 
 void GLWindow::wake() {

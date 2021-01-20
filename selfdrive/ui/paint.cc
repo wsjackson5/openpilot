@@ -291,7 +291,7 @@ static void ui_draw_vision_face(UIState *s) {
   const int face_size = 96;
   const int face_x = (s->scene.viz_rect.x + face_size + (bdr_s * 2) + 255);
   const int face_y = (s->scene.viz_rect.bottom() - footer_h + ((footer_h - face_size) / 2));
-  ui_draw_circle_image(s, face_x, face_y, face_size, "driver_face", s->scene.dmonitoring_state.getFaceDetected());
+  ui_draw_circle_image(s, face_x, face_y, face_size, "driver_face", s->scene.dmonitoring_state.getIsActiveMode());
 }
 
 static void ui_draw_vision_brake(UIState *s) {
@@ -304,7 +304,7 @@ static void ui_draw_vision_brake(UIState *s) {
 static void ui_draw_driver_view(UIState *s) {
   s->scene.sidebar_collapsed = true;
   const bool is_rhd = s->scene.is_rhd;
-  const Rect &viz_rect = s->scene.viz_rect;
+  const Rect &viz_rect = s->scene.viz_rect; 
   const int width = 3 * viz_rect.w / 4;
   const Rect rect = {viz_rect.centerX() - width / 2, viz_rect.y, width, viz_rect.h};  // x, y, w, h
   const Rect valid_rect = {is_rhd ? rect.right() - rect.h / 2 : rect.x, rect.y, rect.h / 2, rect.h};
@@ -339,7 +339,7 @@ static void ui_draw_driver_view(UIState *s) {
   const int face_size = 85;
   const int icon_x = is_rhd ? rect.right() - face_size - bdr_s * 2 - 200 : rect.x + face_size + bdr_s * 2 + 200;
   const int icon_y = rect.y + rect.h - face_size - (bdr_s * 2.5);
-  ui_draw_circle_image(s, icon_x, icon_y, face_size, "driver_face", face_detected);
+  ui_draw_circle_image(s, icon_x, icon_y, face_size, "driver_face", s->scene.dmonitoring_state.getIsActiveMode());
 
   //draw brake icon
   const int brake_size = 85;
@@ -699,7 +699,7 @@ static void ui_draw_vision_alert(UIState *s) {
                   .h = alr_h};
 
   ui_fill_rect(s->vg, rect, color);
-  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(),
+  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(), 
                                             nvgRGBAf(0.0, 0.0, 0.0, 0.05), nvgRGBAf(0.0, 0.0, 0.0, 0.35)));
 
   nvgFillColor(s->vg, COLOR_WHITE);
