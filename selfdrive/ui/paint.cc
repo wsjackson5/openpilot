@@ -343,8 +343,8 @@ static void ui_draw_driver_view(UIState *s) {
 
   //draw brake icon
   const int brake_size = 85;
-  const int x2 = rect.right() - brake_size - (bdr_s * 2.5) - 200;
-  const int y2 = rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5);
+  const int x2 = rect.x + brake_size + bdr_s * 2 + 200;
+  const int y2 = rect.y + rect.h - brake_size - bdr_s - (bdr_s * 1.5) + 150;
   ui_draw_circle_image(s, x2, y2, brake_size, "brake_img", s->scene.brakeLights);
 }
 
