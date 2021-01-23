@@ -304,7 +304,7 @@ static void ui_draw_vision_brake(UIState *s) {
 static void ui_draw_driver_view(UIState *s) {
   s->scene.sidebar_collapsed = true;
   const bool is_rhd = s->scene.is_rhd;
-  const Rect &viz_rect = s->scene.viz_rect;
+  const Rect &viz_rect = s->scene.viz_rect; 
   const int width = 3 * viz_rect.w / 4;
   const Rect rect = {viz_rect.centerX() - width / 2, viz_rect.y, width, viz_rect.h};  // x, y, w, h
   const Rect valid_rect = {is_rhd ? rect.right() - rect.h / 2 : rect.x, rect.y, rect.h / 2, rect.h};
@@ -699,7 +699,7 @@ static void ui_draw_vision_alert(UIState *s) {
                   .h = alr_h};
 
   ui_fill_rect(s->vg, rect, color);
-  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(),
+  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(), 
                                             nvgRGBAf(0.0, 0.0, 0.0, 0.05), nvgRGBAf(0.0, 0.0, 0.0, 0.35)));
 
   nvgFillColor(s->vg, COLOR_WHITE);
@@ -766,8 +766,7 @@ void ui_draw(UIState *s) {
     s->scene.viz_rect.w -= sbr_w;
   }
 
-  const bool draw_alerts = s->started && s->status != STATUS_OFFROAD &&
-                           s->active_app == cereal::UiLayoutState::App::NONE;
+  const bool draw_alerts = s->started && s->active_app == cereal::UiLayoutState::App::NONE;
   const bool draw_vision = draw_alerts && s->vipc_client->connected;
 
   // GL drawing functions
