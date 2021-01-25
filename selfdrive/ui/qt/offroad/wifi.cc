@@ -318,7 +318,7 @@ void WifiUI::refresh() {
       hlayout->addSpacing(50);
       QString ssid = QString::fromUtf8(network.ssid);
       if(ssid.length() > 20){
-        ssid = ssid.left(20)+"¡¦";
+        ssid = ssid.left(20)+"…";
       }
       hlayout->addWidget(new QLabel(ssid));
 
