@@ -1974,6 +1974,10 @@ struct DriverState {
   faceOrientationStd @11 :List(Float32);
   facePositionStd @12 :List(Float32);
   sgProb @13 :Float32;
+  poorVision @17 :Float32;
+  partialFace @18 :Float32;
+  distractedPose @19 :Float32;
+  distractedEyes @20 :Float32;
 }
 
 struct DMonitoringState {
@@ -2064,6 +2068,17 @@ struct Sentinel {
   type @0 :SentinelType;
 }
 
+struct ManagerState {
+  processes @0 :List(ProcessState);
+
+  struct ProcessState {
+    name @0 :Text;
+    pid @1 :Int32;
+    running @2 :Bool;
+    exitCode @3 :Int32;
+  }
+}
+
 struct Event {
   # in nanoseconds?
   logMonoTime @0 :UInt64;
@@ -2146,5 +2161,6 @@ struct Event {
     modelV2 @75 :ModelDataV2;
     frontEncodeIdx @76 :EncodeIndex; # driver facing camera
     wideEncodeIdx @77 :EncodeIndex;
+    managerState @78 :ManagerState;
   }
 }

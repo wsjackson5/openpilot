@@ -193,11 +193,10 @@ void usb_retry_connect() {
 }
 
 void can_recv(PubMaster &pm) {
-  // create message
-  MessageBuilder msg;
-  auto event = msg.initEvent();
-  panda->can_receive(event);
-  pm.send("can", msg);
+  kj::Array<capnp::word> can_data;
+  panda->can_receive(can_data);
+  auto bytes = can_data.asBytes();
+  pm.send("can", bytes.begin(), bytes.size());
 }
 
 void can_send_thread() {
@@ -254,7 +253,7 @@ void can_recv_thread() {
 
     uint64_t cur_time = nanos_since_boot();
     int64_t remaining = next_frame_time - cur_time;
-    if (remaining > 0){
+    if (remaining > 0) {
       std::this_thread::sleep_for(std::chrono::nanoseconds(remaining));
     } else {
       if (ignition){
@@ -463,15 +462,13 @@ void hardware_control_thread() {
   }
 }
 
-static void pigeon_publish_raw(PubMaster &pm, std::string dat) {
+static void pigeon_publish_raw(PubMaster &pm, const std::string &dat) {
   // create message
   MessageBuilder msg;
-  auto ublox_raw = msg.initEvent().initUbloxRaw(dat.length());
-  memcpy(ublox_raw.begin(), dat.data(), dat.length());
-
+  capnp::Data::Builder ublox_row((uint8_t*)dat.data(), dat.length());
+  msg.initEvent().setUbloxRaw(ublox_row);
   pm.send("ubloxRaw", msg);
 }
-
 
 void pigeon_thread() {
   if (!panda->is_pigeon){ return; };
