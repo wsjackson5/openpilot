@@ -41,14 +41,13 @@ static void ui_init_vision(UIState *s) {
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal", "frame",
-                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
+                         "health", "carParams", "driverState", "dMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
   s->scene.satelliteCount = -1;
 
-  s->fb = framebuffer_init("ui", 0, true, &s->fb_w, &s->fb_h);
-  assert(s->fb);
+  s->fb = std::make_unique<FrameBuffer>("ui", 0, true, &s->fb_w, &s->fb_h);
 
   ui_nvg_init(s);
 
@@ -56,6 +55,25 @@ void ui_init(UIState *s) {
   s->vipc_client_rear = new VisionIpcClient("camerad", VISION_STREAM_RGB_BACK, true);
   s->vipc_client_front = new VisionIpcClient("camerad", VISION_STREAM_RGB_FRONT, true);
   s->vipc_client = s->vipc_client_rear;
+}
+
+static int get_path_length_idx(const cereal::ModelDataV2::XYZTData::Reader &line, const float path_height) {
+  const auto line_x = line.getX();
+  int max_idx = 0;
+  for (int i = 0; i < TRAJECTORY_SIZE && line_x[i] < path_height; ++i) {
+    max_idx = i;
+  }
+  return max_idx;
+}
+
+static void update_lead(UIState *s, const cereal::RadarState::Reader &radar_state,
+                        const cereal::ModelDataV2::XYZTData::Reader &line, int idx) {
+  auto &lead_data = s->scene.lead_data[idx];
+  lead_data = (idx == 0) ? radar_state.getLeadOne() : radar_state.getLeadTwo();
+  if (lead_data.getStatus()) {
+    const int path_idx = get_path_length_idx(line, lead_data.getDRel());
+    car_space_to_full_frame(s, lead_data.getDRel(), lead_data.getYRel(), -line.getZ()[path_idx], &s->scene.lead_vertices[idx]);
+  }
 }
 
 template <class T>
@@ -112,8 +130,7 @@ static void update_sockets(UIState *s) {
   }
 
   if (s->started && sm.updated("controlsState")) {
-    auto event = sm["controlsState"];
-    scene.controls_state = event.getControlsState();
+    scene.controls_state = sm["controlsState"].getControlsState();
 
     // TODO: the alert stuff shouldn't be handled here
     s->scene.angleSteers = scene.controls_state.getAngleSteers();
@@ -144,12 +161,10 @@ static void update_sockets(UIState *s) {
     }
   }
   if (sm.updated("radarState")) {
-    auto data = sm["radarState"].getRadarState();
-    scene.lead_data[0] = data.getLeadOne();
-    scene.lead_data[1] = data.getLeadTwo();
-    s->scene.lead_v_rel = scene.lead_data[0].getVRel();
-    s->scene.lead_d_rel = scene.lead_data[0].getDRel();
-    s->scene.lead_status = scene.lead_data[0].getStatus();
+    auto radar_state = sm["radarState"].getRadarState();
+    const auto line = sm["modelV2"].getModelV2().getPosition();
+    update_lead(s, radar_state, line, 0);
+    update_lead(s, radar_state, line, 1);
   }
   if (sm.updated("liveCalibration")) {
     scene.world_objects_visible = true;

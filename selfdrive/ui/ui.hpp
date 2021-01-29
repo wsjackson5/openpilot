@@ -140,6 +140,9 @@ typedef struct UIScene {
   line_vertices_data lane_line_vertices[4];
   line_vertices_data road_edge_vertices[2];
 
+  // lead
+  vertex_data lead_vertices[2];
+  
   //kegman UI
   int lead_status;
   float lead_d_rel, lead_v_rel;
@@ -169,7 +172,7 @@ typedef struct UIState {
   VisionBuf * last_frame;
 
   // framebuffer
-  FramebufferState *fb;
+  std::unique_ptr<FrameBuffer> fb;
   int fb_w, fb_h;
 
   // NVG

@@ -598,4 +598,3 @@ void CLQueuedKernel::debug_print(bool verbose) {
     }
   }
 }
-

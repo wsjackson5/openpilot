@@ -52,6 +52,7 @@ void Toggle::togglePosition() {
   _anim->setEndValue(on ? right : left);
   _anim->setDuration(animation_duration);
   _anim->start();
+  repaint();
 }
 
 void Toggle::enterEvent(QEvent *e) {
