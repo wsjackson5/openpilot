@@ -139,6 +139,9 @@ static void update_sockets(UIState *s) {
     const auto line = sm["modelV2"].getModelV2().getPosition();
     update_lead(s, radar_state, line, 0);
     update_lead(s, radar_state, line, 1);
+    s->scene.lead_v_rel = s->scene.lead_data[0].getVRel();
+    s->scene.lead_d_rel = s->scene.lead_data[0].getDRel();
+    s->scene.lead_status = s->scene.lead_data[0].getStatus();
   }
   if (sm.updated("liveCalibration")) {
     scene.world_objects_visible = true;
