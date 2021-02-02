@@ -15,7 +15,7 @@ class LatControlPID():
     self.angle_steers_des = 0.
     self.angle_steers_des_last = 0.
     self.angle_steer_rate = [0.5, 1.0]
-    self.angleBP = [10., 15.]
+    self.angleBP = [10., 20.]
     self.angle_steer_new = 0.0
 
   def reset(self):
