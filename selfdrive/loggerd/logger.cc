@@ -49,23 +49,6 @@ int logger_mkpath(char* file_path) {
 }
 
 // ***** log metadata *****
-kj::Array<capnp::word> logger_build_boot() {
-  MessageBuilder msg;
-  auto boot = msg.initEvent().initBoot();
-
-  boot.setWallTimeNanos(nanos_since_epoch());
-
-  std::string lastKmsg = util::read_file("/sys/fs/pstore/console-ramoops");
-  boot.setLastKmsg(capnp::Data::Reader((const kj::byte*)lastKmsg.data(), lastKmsg.size()));
-
-  std::string lastPmsg = util::read_file("/sys/fs/pstore/pmsg-ramoops-0");
-  boot.setLastPmsg(capnp::Data::Reader((const kj::byte*)lastPmsg.data(), lastPmsg.size()));
-
-  std::string launchLog = util::read_file("/tmp/launch_log");
-  boot.setLaunchLog(capnp::Text::Reader(launchLog.data(), launchLog.size()));
-  return capnp::messageToFlatArray(msg);
-}
-
 kj::Array<capnp::word> logger_build_init_data() {
   MessageBuilder msg;
   auto init = msg.initEvent().initInitData();
@@ -135,6 +118,15 @@ kj::Array<capnp::word> logger_build_init_data() {
   return capnp::messageToFlatArray(msg);
 }
 
+std::string logger_get_route_name() {
+  char route_name[64] = {'\0'};
+  time_t rawtime = time(NULL);
+  struct tm timeinfo;
+  localtime_r(&rawtime, &timeinfo);
+  strftime(route_name, sizeof(route_name), "%Y-%m-%d--%H-%M-%S", &timeinfo);
+  return route_name;
+}
+
 void log_init_data(LoggerState *s) {
   auto bytes = s->init_data.asBytes();
   logger_log(s, bytes.begin(), bytes.size(), s->has_qlog);
@@ -159,15 +151,8 @@ void logger_init(LoggerState *s, const char* log_name, bool has_qlog) {
 
   s->part = -1;
   s->has_qlog = has_qlog;
-
-  time_t rawtime = time(NULL);
-  struct tm timeinfo;
-  localtime_r(&rawtime, &timeinfo);
-
-  strftime(s->route_name, sizeof(s->route_name),
-           "%Y-%m-%d--%H-%M-%S", &timeinfo);
+  s->route_name = logger_get_route_name();
   snprintf(s->log_name, sizeof(s->log_name), "%s", log_name);
-
   s->init_data = logger_build_init_data();
 }
 
@@ -184,7 +169,7 @@ static LoggerHandle* logger_open(LoggerState *s, const char* root_path) {
   assert(h);
 
   snprintf(h->segment_path, sizeof(h->segment_path),
-          "%s/%s--%d", root_path, s->route_name, s->part);
+          "%s/%s--%d", root_path, s->route_name.c_str(), s->part);
 
   snprintf(h->log_path, sizeof(h->log_path), "%s/%s.bz2", h->segment_path, s->log_name);
   snprintf(h->qlog_path, sizeof(h->qlog_path), "%s/qlog.bz2", h->segment_path);
