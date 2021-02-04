@@ -129,8 +129,6 @@ static void update_sockets(UIState *s) {
     scene.controls_state = sm["controlsState"].getControlsState();
 
     // TODO: the alert stuff shouldn't be handled here
-    s->scene.angleSteers = scene.controls_state.getAngleSteers();
-    s->scene.steerOverride= scene.controls_state.getSteerOverride();
     s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
     s->scene.angleSteersDes = scene.controls_state.getAngleSteersDes();
   }
@@ -203,6 +201,7 @@ static void update_sockets(UIState *s) {
     }
     s->scene.leftBlinker = data.getLeftBlinker();
     s->scene.rightBlinker = data.getRightBlinker();
+    s->scene.angleSteers = data.getSteeringAngle();
   }
 
   if (sm.updated("sensorEvents")) {
