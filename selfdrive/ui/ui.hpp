@@ -151,13 +151,10 @@ typedef struct UIScene {
   float gpsAccuracyUblox;
   float altitudeUblox;
   float hvBpower;
-  bool steerOverride;
   float output_scale;
   float steeringTorqueEps;
   float aEgo;
   float cpuTemp;
-  int cpuPerc;
-
   bool leftBlinker;
   bool rightBlinker;
   int blinker_blinkingrate;

@@ -41,7 +41,7 @@ static void ui_init_vision(UIState *s) {
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "thermal", "frame",
-                         "health", "carParams", "ubloxGnss", "driverState", "dMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
+                         "health", "carParams", "ubloxGnss", "driverState", "driverMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
