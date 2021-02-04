@@ -31,7 +31,7 @@ class LatControlPID():
       pid_log.active = False
       self.pid.reset()
     else:
-      self.angle_steers_des = path_plan.angleSteers  # get from MPC/PathPlanner
+      self.angle_steers_des = path_plan.angleSteers  # get from MPC/LateralPlanner
       self.angle_steer_new = interp(CS.vEgo, self.angleBP, self.angle_steer_rate)
       check_pingpong = abs(self.angle_steers_des - self.angle_steers_des_last) > 4.0
       if check_pingpong:

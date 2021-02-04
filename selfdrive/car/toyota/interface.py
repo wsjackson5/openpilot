@@ -16,7 +16,7 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), has_relay=False, car_fw=[]):  # pylint: disable=dangerous-default-value
-    ret = CarInterfaceBase.get_std_params(candidate, fingerprint, has_relay)
+    ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
 
     ret.carName = "toyota"
     ret.safetyModel = car.CarParams.SafetyModel.toyota
@@ -45,11 +45,15 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 3045. * CV.LB_TO_KG + STD_CARGO_KG
 
       ret.lateralTuning.init('indi')
-      ret.lateralTuning.indi.innerLoopGain = 4.0
-      ret.lateralTuning.indi.outerLoopGain = 3.0
-      ret.lateralTuning.indi.timeConstant = 1.0
-      ret.lateralTuning.indi.actuatorEffectiveness = 1.0
-      ret.steerActuatorDelay = 0.5
+      ret.lateralTuning.indi.innerLoopGainBP = [0.]
+      ret.lateralTuning.indi.innerLoopGainV = [4.0]
+      ret.lateralTuning.indi.outerLoopGainBP = [0.]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0]
+      ret.lateralTuning.indi.timeConstantBP = [0.]
+      ret.lateralTuning.indi.timeConstantV = [1.0]
+      ret.lateralTuning.indi.actuatorEffectivenessBP = [0.]
+      ret.lateralTuning.indi.actuatorEffectivenessV = [1.0]
+      ret.steerActuatorDelay = 0.3
 
     elif candidate in [CAR.RAV4, CAR.RAV4H]:
       stop_and_go = True if (candidate in CAR.RAV4H) else False
@@ -204,14 +208,23 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate in [CAR.COROLLA_TSS2, CAR.COROLLAH_TSS2]:
       stop_and_go = True
-      ret.minSpeedCan = 0.375
       ret.safetyParam = 73
-      ret.wheelbase = 2.63906
+      ret.wheelbase = 2.67  # Average between 2.70 for sedan and 2.64 for hatchback
       ret.steerRatio = 13.9
       tire_stiffness_factor = 0.444  # not optimized yet
       ret.mass = 3060. * CV.LB_TO_KG + STD_CARGO_KG
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.6], [0.1]]
       ret.lateralTuning.pid.kf = 0.00007818594
+      # Longitudinal tune
+      ret.longitudinalTuning.deadzoneBP = [0., 8.05]
+      ret.longitudinalTuning.deadzoneV = [.0, .14]
+      ret.longitudinalTuning.kpBP = [0., 5., 20.]
+      ret.longitudinalTuning.kpV = [1.3, 1.0, 0.7]
+      ret.longitudinalTuning.kiBP = [0., 5., 12., 20., 27.]
+      ret.longitudinalTuning.kiV = [.35, .23, .20, .17, .1]
+      ret.stoppingBrakeRate = 0.1 # reach stopping target smoothly
+      ret.startingBrakeRate = 2.0 # release brakes fast
+      ret.startAccel = 1.2 # Accelerate from 0 faster
 
     elif candidate in [CAR.LEXUS_ES_TSS2, CAR.LEXUS_ESH_TSS2]:
       stop_and_go = True

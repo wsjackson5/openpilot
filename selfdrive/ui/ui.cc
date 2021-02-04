@@ -175,10 +175,10 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("health")) {
     auto health = sm["health"].getHealth();
-    scene.hwType = health.getHwType();
+    scene.pandaType = health.getPandaType();
     s->ignition = health.getIgnitionLine() || health.getIgnitionCan();
   } else if ((s->sm->frame - s->sm->rcv_frame("health")) > 5*UI_FREQ) {
-    scene.hwType = cereal::HealthData::HwType::UNKNOWN;
+    scene.pandaType = cereal::HealthData::PandaType::UNKNOWN;
   }
   if (sm.updated("carParams")) {
     s->longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
@@ -186,11 +186,10 @@ static void update_sockets(UIState *s) {
   if (sm.updated("driverState")) {
     scene.driver_state = sm["driverState"].getDriverState();
   }
-  if (sm.updated("dMonitoringState")) {
-    scene.dmonitoring_state = sm["dMonitoringState"].getDMonitoringState();
-    scene.is_rhd = scene.dmonitoring_state.getIsRHD();
-    scene.frontview = scene.dmonitoring_state.getIsPreview();
-  } else if (scene.frontview && (sm.frame - sm.rcv_frame("dMonitoringState")) > UI_FREQ/2) {
+  if (sm.updated("driverMonitoringState")) {
+    scene.dmonitoring_state = sm["driverMonitoringState"].getDriverMonitoringState();
+    scene.frontview = !s->ignition;
+  } else if (scene.frontview && (sm.frame - sm.rcv_frame("driverMonitoringState")) > UI_FREQ/2) {
     scene.frontview = false;
   }
   if (sm.updated("carState")) {
@@ -318,6 +317,7 @@ static void update_status(UIState *s) {
     s->status = STATUS_DISENGAGED;
     s->started_frame = s->sm->frame;
 
+    read_param(&s->scene.is_rhd, "IsRHD");
     s->active_app = cereal::UiLayoutState::App::NONE;
     s->sidebar_collapsed = true;
     s->scene.alert_size = cereal::ControlsState::AlertSize::NONE;

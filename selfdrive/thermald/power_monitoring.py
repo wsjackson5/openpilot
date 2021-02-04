@@ -6,10 +6,9 @@ from statistics import mean
 from cereal import log
 from common.params import Params, put_nonblocking
 from common.realtime import sec_since_boot
-from selfdrive.hardware import HARDWARE, TICI
+from selfdrive.hardware import HARDWARE
 from selfdrive.swaglog import cloudlog
 
-PANDA_OUTPUT_VOLTAGE = 5.28
 CAR_VOLTAGE_LOW_PASS_K = 0.091 # LPF gain for 5s tau (dt/tau / (dt/tau + 1))
 
 # A C2 uses about 1W while idling, and 30h seens like a good shutoff for most cars
@@ -19,10 +18,6 @@ CAR_CHARGING_RATE_W = 45
 
 VBATT_PAUSE_CHARGING = 11.0
 MAX_TIME_OFFROAD_S = 30*3600
-
-def panda_current_to_actual_current(panda_current):
-  # From white/grey panda schematic
-  return (3.3 - (panda_current * 3.3 / 4096)) / 8.25
 
 class PowerMonitoring:
   def __init__(self):
@@ -48,7 +43,7 @@ class PowerMonitoring:
       now = sec_since_boot()
 
       # If health is None, we're probably not in a car, so we don't care
-      if health is None or health.health.hwType == log.HealthData.HwType.unknown:
+      if health is None or health.health.pandaType == log.HealthData.PandaType.unknown:
         with self.integration_lock:
           self.last_measurement_time = None
           self.next_pulsed_measurement_time = None
@@ -82,7 +77,7 @@ class PowerMonitoring:
           self.last_measurement_time = now
       else:
         # No ignition, we integrate the offroad power used by the device
-        is_uno = health.health.hwType == log.HealthData.HwType.uno
+        is_uno = health.health.pandaType == log.HealthData.PandaType.uno
         # Get current power draw somehow
         #current_power = HARDWARE.get_current_power_draw()
         current_power = 0
@@ -94,7 +89,7 @@ class PowerMonitoring:
           # If the battery is discharging, we can use this measurement
           # On C2: this is low by about 10-15%, probably mostly due to UNO draw not being factored in
           current_power = ((HARDWARE.get_battery_voltage() / 1000000) * (HARDWARE.get_battery_current() / 1000000))
-        elif (health.health.hwType in [log.HealthData.HwType.whitePanda, log.HealthData.HwType.greyPanda]) and (health.health.current > 1):
+        elif (health.health.pandaType in [log.HealthData.PandaType.whitePanda, log.HealthData.PandaType.greyPanda]) and (health.health.current > 1):
           # If white/grey panda, use the integrated current measurements if the measurement is not 0
           # If the measurement is 0, the current is 400mA or greater, and out of the measurement range of the panda
           # This seems to be accurate to about 5%
