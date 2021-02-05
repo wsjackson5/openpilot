@@ -218,7 +218,7 @@ static void ui_draw_world(UIState *s) {
   nvgResetScissor(s->vg);
 }
 
-static void ui_draw_vision_speed(UIState *s) {  
+static void ui_draw_vision_speed(UIState *s) {
   const float speed = std::max(0.0, s->scene.car_state.getVEgo() * (s->is_metric ? 3.6 : 2.2369363));
   const std::string speed_str = std::to_string((int)std::nearbyint(speed));
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
@@ -233,12 +233,11 @@ static void ui_draw_vision_speed(UIState *s) {
       ui_draw_text(s, s->viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_RED_SPEED, "sans-bold");
       ui_draw_text(s, s->viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_RED_SPEED, "sans-regular");
     }
-  }
-    else {
+  } else {
     ui_draw_text(s, s->viz_rect.centerX(), 240, speed_str.c_str(), 96 * 2.5, COLOR_WHITE, "sans-bold");
     ui_draw_text(s, s->viz_rect.centerX(), 320, s->is_metric ? "km/h" : "mph", 36 * 2.5, COLOR_WHITE_ALPHA(200), "sans-regular");
   }
-  
+
   //Blinker
   if(s->scene.leftBlinker) {
     nvgBeginPath(s->vg);

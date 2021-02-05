@@ -190,17 +190,17 @@ static void update_sockets(UIState *s) {
     scene.frontview = false;
   }
   if (sm.updated("carState")) {
-    auto data = sm["carState"].getCarState();
-    s->scene.brakeLights = data.getBrakeLights();
-    s->scene.hvBpower = data.getHvBpower();
-    s->scene.aEgo = data.getAEgo();
-    s->scene.steeringTorqueEps = data.getSteeringTorqueEps();
-    if(s->scene.leftBlinker!=data.getLeftBlinker() || s->scene.rightBlinker!=data.getRightBlinker()) {
+    scene.car_state = sm["carState"].getCarState();
+    s->scene.brakeLights = scene.car_state.getBrakeLights();
+    s->scene.hvBpower = scene.car_state.getHvBpower();
+    s->scene.aEgo = scene.car_state.getAEgo();
+    s->scene.steeringTorqueEps = scene.car_state.getSteeringTorqueEps();
+    if(s->scene.leftBlinker != scene.car_state.getLeftBlinker() || s->scene.rightBlinker != scene.car_state.getRightBlinker()) {
       s->scene.blinker_blinkingrate = 100;
     }
-    s->scene.leftBlinker = data.getLeftBlinker();
-    s->scene.rightBlinker = data.getRightBlinker();
-    s->scene.angleSteers = data.getSteeringAngle();
+    s->scene.leftBlinker = scene.car_state.getLeftBlinker();
+    s->scene.rightBlinker = scene.car_state.getRightBlinker();
+    s->scene.angleSteers = scene.car_state.getSteeringAngle();
   }
 
   if (sm.updated("sensorEvents")) {
