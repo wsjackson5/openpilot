@@ -119,7 +119,6 @@ typedef struct UIScene {
   cereal::ControlsState::AlertSize alert_size;
 
   cereal::HealthData::PandaType pandaType;
-  int satelliteCount;
   NetStatus athenaStatus;
 
   cereal::ThermalData::Reader thermal;
@@ -142,7 +141,7 @@ typedef struct UIScene {
 
   // lead
   vertex_data lead_vertices[2];
-  
+
   //kegman UI
   int lead_status;
   float lead_d_rel, lead_v_rel;
