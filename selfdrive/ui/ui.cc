@@ -76,9 +76,8 @@ static void update_lead(UIState *s, const cereal::RadarState::Reader &radar_stat
   }
 }
 
-template <class T>
 static void update_line_data(const UIState *s, const cereal::ModelDataV2::XYZTData::Reader &line,
-                             float y_off, float z_off, T *pvd, float max_distance) {
+                             float y_off, float z_off, line_vertices_data *pvd, float max_distance) {
   const auto line_x = line.getX(), line_y = line.getY(), line_z = line.getZ();
   int max_idx = -1;
   vertex_data *v = &pvd->v[0];
@@ -159,10 +158,17 @@ static void update_sockets(UIState *s) {
     scene.thermal = sm["thermal"].getThermal();
     s->scene.cpuTemp = scene.thermal.getCpu()[0];
   }
+  if (sm.updated("health")) {
+    auto health = sm["health"].getHealth();
+    scene.pandaType = health.getPandaType();
+    s->ignition = health.getIgnitionLine() || health.getIgnitionCan();
+  } else if ((s->sm->frame - s->sm->rcv_frame("health")) > 5*UI_FREQ) {
+    scene.pandaType = cereal::HealthData::PandaType::UNKNOWN;
+  }
   if (sm.updated("ubloxGnss")) {
     auto data = sm["ubloxGnss"].getUbloxGnss();
     if (data.which() == cereal::UbloxGnss::MEASUREMENT_REPORT) {
-	    auto measurements = data.getMeasurementReport().getMeasurements();
+      auto measurements = data.getMeasurementReport().getMeasurements();
       for (auto m : measurements) {
         scene.cnoAvg += m.getCno();
       }
@@ -173,13 +179,6 @@ static void update_sockets(UIState *s) {
     s->scene.gpsAccuracyUblox = data2.getAccuracy();
     s->scene.altitudeUblox = data2.getAltitude();
   }
-  if (sm.updated("health")) {
-    auto health = sm["health"].getHealth();
-    scene.pandaType = health.getPandaType();
-    s->ignition = health.getIgnitionLine() || health.getIgnitionCan();
-  } else if ((s->sm->frame - s->sm->rcv_frame("health")) > 5*UI_FREQ) {
-    scene.pandaType = cereal::HealthData::PandaType::UNKNOWN;
-  }
   if (sm.updated("carParams")) {
     s->longitudinal_control = sm["carParams"].getCarParams().getOpenpilotLongitudinalControl();
   }
@@ -188,8 +187,8 @@ static void update_sockets(UIState *s) {
   }
   if (sm.updated("driverMonitoringState")) {
     scene.dmonitoring_state = sm["driverMonitoringState"].getDriverMonitoringState();
-    if(!s->scene.frontview && !s->ignition) {
-      read_param(&s->scene.frontview, "IsDriverViewEnabled");
+    if(!scene.frontview && !s->ignition) {
+      read_param(&scene.frontview, "IsDriverViewEnabled");
     }
   } else if ((sm.frame - sm.rcv_frame("driverMonitoringState")) > UI_FREQ/2) {
     scene.frontview = false;
@@ -219,7 +218,7 @@ static void update_sockets(UIState *s) {
       }
     }
   }
-  s->started = s->scene.thermal.getStarted() || s->scene.frontview;
+  s->started = scene.thermal.getStarted() || scene.frontview;
 }
 
 static void update_alert(UIState *s) {
@@ -241,23 +240,23 @@ static void update_alert(UIState *s) {
   }
 
   // Handle controls timeout
-  if (s->scene.thermal.getStarted() && (s->sm->frame - s->started_frame) > 10 * UI_FREQ) {
+  if (scene.thermal.getStarted() && (s->sm->frame - s->started_frame) > 10 * UI_FREQ) {
     const uint64_t cs_frame = s->sm->rcv_frame("controlsState");
     if (cs_frame < s->started_frame) {
       // car is started, but controlsState hasn't been seen at all
-      s->scene.alert_text1 = "openpilot Unavailable";
-      s->scene.alert_text2 = "Waiting for controls to start";
-      s->scene.alert_size = cereal::ControlsState::AlertSize::MID;
+      scene.alert_text1 = "openpilot Unavailable";
+      scene.alert_text2 = "Waiting for controls to start";
+      scene.alert_size = cereal::ControlsState::AlertSize::MID;
     } else if ((s->sm->frame - cs_frame) > 5 * UI_FREQ) {
       // car is started, but controls is lagging or died
-      if (s->scene.alert_text2 != "Controls Unresponsive") {
+      if (scene.alert_text2 != "Controls Unresponsive") {
         s->sound->play(AudibleAlert::CHIME_WARNING_REPEAT);
         LOGE("Controls unresponsive");
       }
 
-      s->scene.alert_text1 = "TAKE CONTROL IMMEDIATELY";
-      s->scene.alert_text2 = "Controls Unresponsive";
-      s->scene.alert_size = cereal::ControlsState::AlertSize::FULL;
+      scene.alert_text1 = "TAKE CONTROL IMMEDIATELY";
+      scene.alert_text2 = "Controls Unresponsive";
+      scene.alert_size = cereal::ControlsState::AlertSize::FULL;
       s->status = STATUS_ALERT;
     }
   }
