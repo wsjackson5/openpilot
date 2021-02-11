@@ -186,7 +186,7 @@ def thermald_thread():
 
   health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
   health_sock = messaging.sub_sock('health', timeout=health_timeout)
-  location_sock = messaging.sub_sock('gpsLocation')
+  location_sock = messaging.sub_sock('gpsLocationExternal')
 
   fan_speed = 0
   count = 0
@@ -447,7 +447,7 @@ def thermald_thread():
       cloudlog.event("STATUS_PACKET",
                      count=count,
                      health=(health.to_dict() if health else None),
-                     location=(location.gpsLocation.to_dict() if location else None),
+                     location=(location.gpsLocationExternal.to_dict() if location else None),
                      thermal=msg.to_dict())
 
     count += 1
