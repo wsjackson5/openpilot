@@ -21,17 +21,17 @@ class LatControlPID():
   def reset(self):
     self.pid.reset()
 
-  def update(self, active, CS, CP, path_plan):
+  def update(self, active, CS, CP, lat_plan):
     pid_log = log.ControlsState.LateralPIDState.new_message()
-    pid_log.steerAngle = float(CS.steeringAngle)
-    pid_log.steerRate = float(CS.steeringRate)
+    pid_log.steeringAngleDeg = float(CS.steeringAngleDeg)
+    pid_log.steeringRateDeg = float(CS.steeringRateDeg)
 
     if CS.vEgo < 0.3 or not active:
       output_steer = 0.0
       pid_log.active = False
       self.pid.reset()
     else:
-      self.angle_steers_des = path_plan.angleSteers  # get from MPC/LateralPlanner
+      self.angle_steers_des = lat_plan.steeringAngleDeg # get from MPC/LateralPlanner
       #self.angle_steer_new = interp(CS.vEgo, self.angleBP, self.angle_steer_rate)
       #check_pingpong = abs(self.angle_steers_des - self.angle_steers_des_last) > 4.0
       #if check_pingpong:
@@ -42,15 +42,15 @@ class LatControlPID():
       self.pid.neg_limit = -steers_max
       steer_feedforward = self.angle_steers_des   # feedforward desired angle
       if CP.steerControlType == car.CarParams.SteerControlType.torque:
-        # TODO: feedforward something based on path_plan.rateSteers
-        steer_feedforward -= path_plan.angleOffset   # subtract the offset, since it does not contribute to resistive torque
+        # TODO: feedforward something based on lat_plan.rateSteers
+        steer_feedforward -= lat_plan.angleOffsetDeg # subtract the offset, since it does not contribute to resistive torque
         #steer_feedforward *= CS.vEgo**2  # proportional to realigning tire momentum (~ lateral accel)
         _c1, _c2, _c3 = [0.35189607550172824, 7.506201251644202, 69.226826411091]
         steer_feedforward *= _c1 * CS.vEgo ** 2 + _c2 * CS.vEgo + _c3
       deadzone = 0.0
 
       check_saturation = (CS.vEgo > 10) and not CS.steeringRateLimited and not CS.steeringPressed
-      output_steer = self.pid.update(self.angle_steers_des, CS.steeringAngle, check_saturation=check_saturation, override=CS.steeringPressed,
+      output_steer = self.pid.update(self.angle_steers_des, CS.steeringAngleDeg, check_saturation=check_saturation, override=CS.steeringPressed,
                                      feedforward=steer_feedforward, speed=CS.vEgo, deadzone=deadzone)
       pid_log.active = True
       pid_log.p = self.pid.p

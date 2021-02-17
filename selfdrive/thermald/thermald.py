@@ -26,9 +26,9 @@ ThermalConfig = namedtuple('ThermalConfig', ['cpu', 'gpu', 'mem', 'bat', 'ambien
 
 FW_SIGNATURE = get_expected_signature()
 
-ThermalStatus = log.ThermalData.ThermalStatus
-NetworkType = log.ThermalData.NetworkType
-NetworkStrength = log.ThermalData.NetworkStrength
+ThermalStatus = log.DeviceState.ThermalStatus
+NetworkType = log.DeviceState.NetworkType
+NetworkStrength = log.DeviceState.NetworkStrength
 CURRENT_TAU = 15.   # 15s time constant
 CPU_TEMP_TAU = 5.   # 5s time constant
 DAYS_NO_CONNECTIVITY_MAX = 7  # do not allow to engage after a week without internet
@@ -63,12 +63,12 @@ def read_tz(x):
 
 
 def read_thermal(thermal_config):
-  dat = messaging.new_message('thermal')
-  dat.thermal.cpu = [read_tz(z) / thermal_config.cpu[1] for z in thermal_config.cpu[0]]
-  dat.thermal.gpu = [read_tz(z) / thermal_config.gpu[1] for z in thermal_config.gpu[0]]
-  dat.thermal.mem = read_tz(thermal_config.mem[0]) / thermal_config.mem[1]
-  dat.thermal.ambient = read_tz(thermal_config.ambient[0]) / thermal_config.ambient[1]
-  dat.thermal.bat = read_tz(thermal_config.bat[0]) / thermal_config.bat[1]
+  dat = messaging.new_message('deviceState')
+  dat.deviceState.cpuTempC = [read_tz(z) / thermal_config.cpu[1] for z in thermal_config.cpu[0]]
+  dat.deviceState.gpuTempC = [read_tz(z) / thermal_config.gpu[1] for z in thermal_config.gpu[0]]
+  dat.deviceState.memoryTempC = read_tz(thermal_config.mem[0]) / thermal_config.mem[1]
+  dat.deviceState.ambientTempC = read_tz(thermal_config.ambient[0]) / thermal_config.ambient[1]
+  dat.deviceState.batteryTempC = read_tz(thermal_config.bat[0]) / thermal_config.bat[1]
   return dat
 
 
@@ -153,21 +153,21 @@ def handle_fan_uno(max_cpu_temp, bat_temp, fan_speed, ignition):
 
   return new_speed
 
-def check_car_battery_voltage(should_start, health, charging_disabled, msg):
+def check_car_battery_voltage(should_start, pandaState, charging_disabled, msg):
 
   # charging disallowed if:
   #   - there are health packets from panda, and;
   #   - 12V battery voltage is too low, and;
   #   - onroad isn't started
-  print(health)
+  print(pandaState)
 
-  if charging_disabled and (health is None or health.health.voltage > 12500 and msg.thermal.batteryPercent < 40):
+  if charging_disabled and (pandaState is None or pandaState.pandaState.voltage > 12500 and msg.deviceState.batteryPercent < 40):
     charging_disabled = False
     os.system('echo "1" > /sys/class/power_supply/battery/charging_enabled')
-  elif not charging_disabled and (msg.thermal.batteryPercent > 80 or (health is not None and health.health.voltage < 11800 and not should_start)):
+  elif not charging_disabled and (msg.deviceState.batteryPercent > 80 or (health is not None and pandaState.pandaState.voltage < 11800 and not should_start)):
     charging_disabled = True
     os.system('echo "0" > /sys/class/power_supply/battery/charging_enabled')
-  elif msg.thermal.batteryCurrent < 0 and msg.thermal.batteryPercent > 80:
+  elif msg.deviceState.batteryCurrent < 0 and msg.deviceState.batteryPercent > 80:
     charging_disabled = True
     os.system('echo "0" > /sys/class/power_supply/battery/charging_enabled')
 
@@ -182,10 +182,10 @@ def set_offroad_alert_if_changed(offroad_alert: str, show_alert: bool, extra_tex
 
 def thermald_thread():
 
-  pm = messaging.PubMaster(['thermal'])
+  pm = messaging.PubMaster(['deviceState'])
 
-  health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
-  health_sock = messaging.sub_sock('health', timeout=health_timeout)
+  pandaState_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected pandaState frequency
+  pandaState_sock = messaging.sub_sock('pandaState', timeout=pandaState_timeout)
   location_sock = messaging.sub_sock('gpsLocationExternal')
 
   fan_speed = 0
@@ -208,7 +208,7 @@ def thermald_thread():
 
   current_filter = FirstOrderFilter(0., CURRENT_TAU, DT_TRML)
   cpu_temp_filter = FirstOrderFilter(0., CPU_TEMP_TAU, DT_TRML)
-  health_prev = None
+  pandaState_prev = None
   charging_disabled = False
   should_start_prev = False
   handle_fan = None
@@ -222,14 +222,14 @@ def thermald_thread():
   thermal_config = get_thermal_config()
 
   while 1:
-    health = messaging.recv_sock(health_sock, wait=True)
+    pandaState = messaging.recv_sock(pandaState_sock, wait=True)
     msg = read_thermal(thermal_config)
 
-    if health is not None:
-      usb_power = health.health.usbPowerMode != log.HealthData.UsbPowerMode.client
+    if pandaState is not None:
+      usb_power = pandaState.pandaState.usbPowerMode != log.PandaState.UsbPowerMode.client
 
       # If we lose connection to the panda, wait 5 seconds before going offroad
-      if health.health.pandaType == log.HealthData.PandaType.unknown:
+      if pandaState.pandaState.pandaType == log.PandaState.PandaType.unknown:
         no_panda_cnt += 1
         if no_panda_cnt > DISCONNECT_TIMEOUT / DT_TRML:
           if startup_conditions["ignition"]:
@@ -237,12 +237,12 @@ def thermald_thread():
           startup_conditions["ignition"] = False
       else:
         no_panda_cnt = 0
-        startup_conditions["ignition"] = health.health.ignitionLine or health.health.ignitionCan
+        startup_conditions["ignition"] = pandaState.pandaState.ignitionLine or pandaState.pandaState.ignitionCan
 
       # Setup fan handler on first connect to panda
-      if handle_fan is None and health.health.pandaType != log.HealthData.PandaType.unknown:
-        is_uno = health.health.pandaType == log.HealthData.PandaType.uno
-        has_relay = health.health.pandaType in [log.HealthData.PandaType.blackPanda, log.HealthData.PandaType.uno, log.HealthData.PandaType.dos]
+      if handle_fan is None and pandaState.pandaState.pandaType != log.PandaState.PandaType.unknown:
+        is_uno = pandaState.pandaState.pandaType == log.PandaState.PandaType.uno
+        has_relay = pandaState.pandaState.pandaType in [log.pandaState.PandaType.blackPanda, log.pandaState.PandaType.uno, log.pandaState.PandaType.dos]
 
         if (not EON) or is_uno:
           cloudlog.info("Setting up UNO fan handler")
@@ -253,11 +253,11 @@ def thermald_thread():
           handle_fan = handle_fan_eon
 
       # Handle disconnect
-      if health_prev is not None:
-        if health.health.pandaType == log.HealthData.PandaType.unknown and \
-          health_prev.health.pandaType != log.HealthData.PandaType.unknown:
+      if pandaState_prev is not None:
+        if pandaState.pandaState.pandaType == log.PandaState.PandaType.unknown and \
+          pandaState_prev.pandaState.pandaType != log.PandaState.PandaType.unknown:
           params.panda_disconnect()
-      health_prev = health
+      pandaState_prev = pandaState
 
     # get_network_type is an expensive call. update every 10s
     if (count % int(10. / DT_TRML)) == 0:
@@ -267,33 +267,33 @@ def thermald_thread():
       except Exception:
         cloudlog.exception("Error getting network status")
 
-    msg.thermal.freeSpacePercent = get_available_percent(default=100.0) / 100.0
-    msg.thermal.memoryUsagePercent = int(round(psutil.virtual_memory().percent))
-    msg.thermal.cpuUsagePercent = int(round(psutil.cpu_percent()))
-    msg.thermal.networkType = network_type
-    msg.thermal.networkStrength = network_strength
-    msg.thermal.batteryPercent = HARDWARE.get_battery_capacity()
-    msg.thermal.batteryStatus = HARDWARE.get_battery_status()
-    msg.thermal.batteryCurrent = HARDWARE.get_battery_current()
-    msg.thermal.batteryVoltage = HARDWARE.get_battery_voltage()
-    msg.thermal.usbOnline = HARDWARE.get_usb_present()
+    msg.deviceState.freeSpacePercent = get_available_percent(default=100.0) / 100.0
+    msg.deviceState.memoryUsagePercent = int(round(psutil.virtual_memory().percent))
+    msg.deviceState.cpuUsagePercent = int(round(psutil.cpu_percent()))
+    msg.deviceState.networkType = network_type
+    msg.deviceState.networkStrength = network_strength
+    msg.deviceState.batteryPercent = HARDWARE.get_battery_capacity()
+    msg.deviceState.batteryStatus = HARDWARE.get_battery_status()
+    msg.deviceState.batteryCurrent = HARDWARE.get_battery_current()
+    msg.deviceState.batteryVoltage = HARDWARE.get_battery_voltage()
+    msg.deviceState.usbOnline = HARDWARE.get_usb_present()
 
     # Fake battery levels on uno for frame
     if (not EON) or is_uno:
-      msg.thermal.batteryPercent = 100
-      msg.thermal.batteryStatus = "Charging"
-      msg.thermal.bat = 0
+      msg.deviceState.batteryPercent = 100
+      msg.deviceState.batteryStatus = "Charging"
+      msg.deviceState.batteryTempC = 0
 
-    current_filter.update(msg.thermal.batteryCurrent / 1e6)
+    current_filter.update(msg.deviceState.batteryCurrent / 1e6)
 
     # TODO: add car battery voltage check
-    max_cpu_temp = cpu_temp_filter.update(max(msg.thermal.cpu))
-    max_comp_temp = max(max_cpu_temp, msg.thermal.mem, max(msg.thermal.gpu))
-    bat_temp = msg.thermal.bat
+    max_cpu_temp = cpu_temp_filter.update(max(msg.deviceState.cpuTempC))
+    max_comp_temp = max(max_cpu_temp, msg.deviceState.memoryTempC, max(msg.deviceState.gpuTempC))
+    bat_temp = msg.deviceState.batteryTempC
 
     if handle_fan is not None:
       fan_speed = handle_fan(max_cpu_temp, bat_temp, fan_speed, startup_conditions["ignition"])
-      msg.thermal.fanSpeedPercentDesired = fan_speed
+      msg.deviceState.fanSpeedPercentDesired = fan_speed
 
     # If device is offroad we want to cool down before going onroad
     # since going onroad increases load and can make temps go over 107
@@ -369,7 +369,7 @@ def thermald_thread():
     set_offroad_alert_if_changed("Offroad_PandaFirmwareMismatch", (not startup_conditions["fw_version_match"]))
 
     # with 2% left, we killall, otherwise the phone will take a long time to boot
-    startup_conditions["free_space"] = msg.thermal.freeSpacePercent > 0.02
+    startup_conditions["free_space"] = msg.deviceState.freeSpacePercent > 0.02
     startup_conditions["completed_training"] = params.get("CompletedTrainingVersion") == training_version or \
                                                (current_branch in ['dashcam', 'dashcam-staging'])
     startup_conditions["not_driver_view"] = not params.get("IsDriverViewEnabled") == b"1"
@@ -405,36 +405,36 @@ def thermald_thread():
       if off_ts is None:
         off_ts = sec_since_boot()
 
-    charging_disabled = check_car_battery_voltage(should_start, health, charging_disabled, msg)
+    charging_disabled = check_car_battery_voltage(should_start, pandaState, charging_disabled, msg)
 
-    if msg.thermal.batteryCurrent > 0:
-      msg.thermal.batteryStatus = "Discharging"
+    if msg.deviceState.batteryCurrent > 0:
+      msg.deviceState.batteryStatus = "Discharging"
     else:
-      msg.thermal.batteryStatus = "Charging"
+      msg.deviceState.batteryStatus = "Charging"
 
 
-    msg.thermal.chargingDisabled = charging_disabled
+    msg.deviceState.chargingDisabled = charging_disabled
     # Offroad power monitoring
-    power_monitor.calculate(health)
-    msg.thermal.offroadPowerUsage = power_monitor.get_power_used()
-    msg.thermal.carBatteryCapacity = max(0, power_monitor.get_car_battery_capacity())
+    power_monitor.calculate(pandaState)
+    msg.deviceState.offroadPowerUsageUwh = power_monitor.get_power_used()
+    msg.deviceState.carBatteryCapacityUwh = max(0, power_monitor.get_car_battery_capacity())
 
     # Check if we need to disable charging (handled by boardd)
-    msg.thermal.chargingDisabled = power_monitor.should_disable_charging(health, off_ts)
+    msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(pandaState, off_ts)
 
     # Check if we need to shut down
-    if power_monitor.should_shutdown(health, off_ts, started_seen, LEON):
+    if power_monitor.should_shutdown(pandaState, off_ts, started_seen, LEON):
       cloudlog.info(f"shutting device down, offroad since {off_ts}")
       # TODO: add function for blocking cloudlog instead of sleep
       time.sleep(10)
       os.system('LD_LIBRARY_PATH="" svc power shutdown')
 
-    msg.thermal.chargingError = current_filter.x > 0. and msg.thermal.batteryPercent < 90  # if current is positive, then battery is being discharged
-    msg.thermal.started = started_ts is not None
-    msg.thermal.startedMonoTime = int(1e9*(started_ts or 0))
+    msg.deviceState.chargingError = current_filter.x > 0. and msg.deviceState.batteryPercent < 90  # if current is positive, then battery is being discharged
+    msg.deviceState.started = started_ts is not None
+    msg.deviceState.startedMonoTime = int(1e9*(started_ts or 0))
 
-    msg.thermal.thermalStatus = thermal_status
-    pm.send("thermal", msg)
+    msg.deviceState.thermalStatus = thermal_status
+    pm.send("deviceState", msg)
 
     set_offroad_alert_if_changed("Offroad_ChargeDisabled", (not usb_power))
 
@@ -446,9 +446,9 @@ def thermald_thread():
       location = messaging.recv_sock(location_sock)
       cloudlog.event("STATUS_PACKET",
                      count=count,
-                     health=(health.to_dict() if health else None),
+                     pandaState=(pandaState.to_dict() if pandaState else None),
                      location=(location.gpsLocationExternal.to_dict() if location else None),
-                     thermal=msg.to_dict())
+                     deviceState=msg.to_dict())
 
     count += 1
 
