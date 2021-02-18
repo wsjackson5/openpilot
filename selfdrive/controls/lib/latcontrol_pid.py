@@ -2,7 +2,6 @@ from selfdrive.controls.lib.pid import LatPIDController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import car
 from cereal import log
-from common.numpy_fast import interp
 
 
 class LatControlPID():
@@ -13,10 +12,6 @@ class LatControlPID():
                                 k_f=CP.lateralTuning.pid.kf, pos_limit=1.0, neg_limit=-1.0,
                                 sat_limit=CP.steerLimitTimer)
     self.angle_steers_des = 0.
-    #self.angle_steers_des_last = 0.
-    #self.angle_steer_rate = [0.5, 1.0]
-    #self.angleBP = [10., 20.]
-    #self.angle_steer_new = 0.0
 
   def reset(self):
     self.pid.reset()
@@ -32,10 +27,6 @@ class LatControlPID():
       self.pid.reset()
     else:
       self.angle_steers_des = lat_plan.steeringAngleDeg # get from MPC/LateralPlanner
-      #self.angle_steer_new = interp(CS.vEgo, self.angleBP, self.angle_steer_rate)
-      #check_pingpong = abs(self.angle_steers_des - self.angle_steers_des_last) > 4.0
-      #if check_pingpong:
-        #self.angle_steers_des = path_plan.angleSteers * self.angle_steer_new
 
       steers_max = get_steer_max(CP, CS.vEgo)
       self.pid.pos_limit = steers_max
@@ -58,7 +49,5 @@ class LatControlPID():
       pid_log.f = self.pid.f
       pid_log.output = output_steer
       pid_log.saturated = bool(self.pid.saturated)
-
-      #self.angle_steers_des_last = self.angle_steers_des
 
     return output_steer, float(self.angle_steers_des), pid_log

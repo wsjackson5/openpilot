@@ -42,11 +42,10 @@ static void ui_init_vision(UIState *s) {
 
 void ui_init(UIState *s) {
   s->sm = new SubMaster({"modelV2", "controlsState", "uiLayoutState", "liveCalibration", "radarState", "deviceState", "roadCameraState", "liveLocationKalman",
-                         "pandaState", "carParams", "ubloxGnss", "driverState", "driverMonitoringState", "sensorEvents", "carState", "gpsLocationExternal"});
+                         "pandaState", "carParams", "driverState", "driverMonitoringState", "sensorEvents", "carState", "ubloxGnss", "gpsLocationExternal"});
 
   s->started = false;
   s->status = STATUS_OFFROAD;
-  s->scene.satelliteCount = -1;
 
   s->fb = std::make_unique<FrameBuffer>("ui", 0, true, &s->fb_w, &s->fb_h);
 
