@@ -4,19 +4,13 @@ CFLAGS += -Tstm32_flash.ld
 
 DFU_UTIL = "dfu-util"
 
-PC = 0
-
+# Compile fast charge (DCP) only not on EON
 ifeq (,$(wildcard /EON))
-  ifeq (,$(wildcard /TICI))
-    PC = 1
-  endif
-endif
-
-ifeq (1, $(PC))
   BUILDER = DEV
 else
   CFLAGS += "-DEON"
   BUILDER = EON
+  DFU_UTIL = "tools/dfu-util-aarch64"
 endif
 
 CC = arm-none-eabi-gcc
