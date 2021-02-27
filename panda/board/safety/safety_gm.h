@@ -279,7 +279,7 @@ static int gm_fwd_hook(int bus_num, CAN_FIFOMailBox_TypeDef *to_fwd) {
       bus_fwd = 1;  // Camera is on CAN2
     }
   }
-  if (bus_num == 1) {
+  if (bus_num == gm_camera_bus) {
     int addr = GET_ADDR(to_fwd);
     if (addr != 384) {
       //only perform forwarding if we have seen LKAS messages on CAN2
