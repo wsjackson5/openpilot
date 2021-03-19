@@ -41,10 +41,6 @@ private:
   QWidget *terms_screen();
   QWidget *training_screen();
 
-#ifndef QCOM
-  QWebEngineView* view;
-#endif
-
 signals:
   void onboardingDone();
 
