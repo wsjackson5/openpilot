@@ -7,7 +7,7 @@
 #include <QButtonGroup>
 #include <QStackedLayout>
 
-#include "networking.hpp"
+#include "selfdrive/ui/qt/widgets/toggle.hpp"
 
 // *** settings widgets ***
 
@@ -17,6 +17,7 @@ class ParamsToggle : public QFrame {
 public:
   explicit ParamsToggle(QString param, QString title, QString description,
                         QString icon, QWidget *parent = 0);
+  Toggle *toggle;
 
 private:
   QString param;
