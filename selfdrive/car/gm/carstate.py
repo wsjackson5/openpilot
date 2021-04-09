@@ -15,12 +15,12 @@ class CarState(CarStateBase):
     can_define = CANDefine(DBC[CP.carFingerprint]['pt'])
     self.shifter_values = can_define.dv["ECMPRDNL"]["PRNDL"]
     self.user_gas, self.user_gas_pressed = 0., 0
-    #self.stockCruise_prev = False
-    #self.stockCruise = False
+    self.adaptive_Cruise = False
+    self.enable_lkas = True
 
   def update(self, pt_cp):
     ret = car.CarState.new_message()
-    #self.stockCruise_prev = self.stockCruise
+    ret.adaptiveCruise = self.adaptive_Cruise
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]['ACCButtons']
     ret.wheelSpeeds.fl = pt_cp.vl["EBCMWheelSpdFront"]['FLWheelSpd'] * CV.KPH_TO_MS
@@ -68,7 +68,7 @@ class CarState(CarStateBase):
     self.park_brake = pt_cp.vl["EPBStatus"]['EPBClosed']
     self.main_on = bool(pt_cp.vl["ECMEngineStatus"]['CruiseMainOn'])
     ret.espDisabled = pt_cp.vl["ESPStatus"]['TractionControlOn'] != 1
-    self.pcm_acc_status = pt_cp.vl["ASCMActiveCruiseControlStatus"]['ACCCmdActive']
+    self.pcm_acc_status = pt_cp.vl["AcceleratorPedal2"]['CruiseState']
 
     self.regen_pressed = False
     if self.car_fingerprint == CAR.VOLT or self.car_fingerprint == CAR.BOLT:
@@ -77,12 +77,9 @@ class CarState(CarStateBase):
 
     # Regen braking is braking
     ret.brakePressed = ret.brake > 1e-5
-    ret.cruiseState.available = self.main_on
-    ret.cruiseState.enabled = self.pcm_acc_status != 0
-    ret.stockCruise = False
-    ret.longControlStart = False
-
+    ret.cruiseState.available = self.pcm_acc_status != 0
     ret.cruiseState.standstill = False
+    ret.cruiseState.enabled = self.main_on or ret.adaptiveCruise
 
     # 0 - inactive, 1 - active, 2 - temporary limited, 3 - failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]['LKATorqueDeliveredStatus']
@@ -105,6 +102,7 @@ class CarState(CarStateBase):
       ("TurnSignals", "BCMTurnSignals", 0),
       ("AcceleratorPedal", "AcceleratorPedal", 0),
       ("ACCCmdActive", "ASCMActiveCruiseControlStatus", 0),
+      ("CruiseState", "AcceleratorPedal2", 0),
       ("ACCButtons", "ASCMSteeringButton", CruiseButtons.UNPRESS),
       ("SteeringWheelAngle", "PSCMSteeringAngle", 0),
       ("FLWheelSpd", "EBCMWheelSpdFront", 0),

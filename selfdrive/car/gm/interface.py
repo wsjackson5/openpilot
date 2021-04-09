@@ -221,10 +221,11 @@ class CarInterface(CarInterfaceBase):
     ret.canValid = self.cp.can_valid
     ret.steeringRateLimited = self.CC.steer_rate_limited if self.CC is not None else False
 
-    ret.cruiseState.available = self.CS.main_on
+    #ret.cruiseState.available = self.CS.main_on
     #ret.cruiseState.enabled = self.CS.main_on if not self.CS.regen_pressed else False
-    ret.cruiseState.enabled = self.CS.main_on
+    #ret.cruiseState.enabled = self.CS.main_on
     #ret.cruiseState.enabled = self.CS.pcm_acc_status == 1
+    ret.cruiseState.enabled = self.CS.main_on or self.CS.adaptive_Cruise
 
     buttonEvents = []
 
@@ -270,26 +271,23 @@ class CarInterface(CarInterfaceBase):
       events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
 
     # handle button presses
-    #for b in ret.buttonEvents:
-      #if ret.cruiseState.available and not self.stockCruise_prev:
-        #if b.type in ButtonType.decelCruise and not b.pressed:
-          #ret.stockCruise = True
-          #events.append(create_event('buttonEnable', [ET.ENABLE]))
-      #elif ret.cruiseState.enabled and self.stockCruise_prev:
-        #if b.type in ButtonType.cancel and not b.pressed:
-          #ret.stockCruise = False
-      #elif not ret.cruiseState.enabled:
-        #ret.stockCruise = False
-
-    #for b in ret.buttonEvents:
-      #if ret.cruiseState.enabled and not self.longControlStart_prev:
-        #if b.type in [ButtonType.accelCruise, ButtonType.cancel] and not b.pressed:
-          #ret.longControlStart = True
-      #elif ret.cruiseState.enabled and self.stockCruise_prev:
-        #if b.type in ButtonType.cancel and not b.pressed:
-         # ret.longControlStart = True
-      #elif not ret.cruiseState.enabled or self.stockCruise_prev:
-        #ret.longControlStart = False
+    if not self.CS.main_on:
+      for b in ret.buttonEvents:
+        if (b.type == ButtonType.decelCruise and not b.pressed) and not self.CS.adaptive_Cruise:
+          self.CS.adaptive_Cruise = True
+          self.CS.enable_lkas = True
+          events.append(create_event('buttonEnable', [ET.ENABLE]))
+        if (b.type == ButtonType.accelCruise and not b.pressed) and not self.CS.adaptive_Cruise:
+          self.CS.adaptive_Cruise = True
+          self.CS.enable_lkas = False
+          events.append(create_event('buttonEnable', [ET.ENABLE]))
+        if (b.type == ButtonType.cancel and b.pressed) and self.CS.adaptive_Cruise:
+          self.CS.adaptive_Cruise = False
+          self.CS.enable_lkas = True
+          events.append(create_event('buttonCancel', [ET.USER_DISABLE]))
+    elif self.CS.main_on:
+      self.CS.adaptive_Cruise = False
+      self.CS.enable_lkas = True
 
     ret.events = events
 

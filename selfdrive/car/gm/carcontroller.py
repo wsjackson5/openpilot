@@ -82,7 +82,7 @@ class CarController():
     ### STEER ###
 
     if (frame % P.STEER_STEP) == 0:
-      lkas_enabled = enabled and not CS.out.steerWarning and CS.out.vEgo > P.MIN_STEER_SPEED
+      lkas_enabled = enabled and not CS.out.steerWarning and CS.out.vEgo > P.MIN_STEER_SPEED and CS.enable_lkas
       if lkas_enabled:
         new_steer = actuators.steer * P.STEER_MAX
         apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
@@ -116,7 +116,7 @@ class CarController():
       #apply_brake = int(round(interp(final_pedal, P.BRAKE_LOOKUP_BP, P.BRAKE_LOOKUP_V)))
 
     # Gas/regen and brakes - all at 25Hz
-    if enabled and CS.CP.enableGasInterceptor: #and CS.out.longControlStart:
+    if enabled and CS.CP.enableGasInterceptor and CS.adaptive_Cruise:
       if (frame % 4) == 0:
         idx = (frame // 4) % 4
 
