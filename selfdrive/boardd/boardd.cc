@@ -218,11 +218,6 @@ void can_send_thread(bool fake_send) {
       }
       continue;
     }
-    const size_t size = (msg->getSize() / sizeof(capnp::word)) + 1;
-    if (buf.size() < size) {
-      buf = kj::heapArray<capnp::word>(size);
-    }
-    memcpy(buf.begin(), msg->getData(), msg->getSize());
 
     capnp::FlatArrayMessageReader cmsg(aligned_buf.align(msg));
     cereal::Event::Reader event = cmsg.getRoot<cereal::Event>();
@@ -578,7 +573,7 @@ int main() {
   LOG("set priority returns %d", err);
 
 #ifdef QCOM2
-  err = set_core_affinity(7);
+  err = set_core_affinity(4);
 #else
   err = set_core_affinity(3);
 #endif
