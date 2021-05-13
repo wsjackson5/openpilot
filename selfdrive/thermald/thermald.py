@@ -244,9 +244,6 @@ def thermald_thread():
     msg.deviceState.batteryVoltage = HARDWARE.get_battery_voltage()
     msg.deviceState.usbOnline = HARDWARE.get_usb_present()
 
-    if EON and started_ts is not None and msg.deviceState.memoryUsagePercent > 40:
-      cloudlog.warning("High offroad memory usage", mem=msg.deviceState.memoryUsagePercent)
-
     # Fake battery levels on uno for frame
     if (not EON) or is_uno:
       msg.deviceState.batteryPercent = 100
@@ -354,8 +351,8 @@ def thermald_thread():
       params.put_bool("IsOffroad", not should_start)
       HARDWARE.set_power_save(not should_start)
       if TICI and not params.get_bool("EnableLteOnroad"):
-        fxn = "stop" if should_start else "start"
-        os.system(f"sudo systemctl {fxn} --no-block lte")
+        fxn = "off" if should_start else "on"
+        os.system(f"nmcli radio wwan {fxn}")
 
     if should_start:
       off_ts = None
