@@ -86,7 +86,7 @@ class LongControl():
       output_gb = 0.
 
     elif CS.regenPressed:
-      self.reset(CS.vEgo)
+      self.reset(v_ego_pid)
       output_gb = min(output_gb, REGEN_THRESHOLD)
 
     # tracking objects and driving
