@@ -8,6 +8,7 @@ STOPPING_EGO_SPEED = 2.0
 STOPPING_TARGET_SPEED_OFFSET = 1.0
 STARTING_TARGET_SPEED = 1.0
 BRAKE_THRESHOLD_TO_PID = 0.2
+REGEN_THRESHOLD = 0.1
 
 BRAKE_STOPPING_TARGET = 0.5  # apply at least this amount of brake to maintain the vehicle stationary
 
@@ -84,6 +85,10 @@ class LongControl():
       self.reset(v_ego_pid)
       output_gb = 0.
 
+    elif CS.regenPressed:
+      self.reset(CS.vEgo)
+      output_gb = min(output_gb, REGEN_THRESHOLD)
+
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
       self.v_pid = v_target
@@ -105,7 +110,7 @@ class LongControl():
       # Keep applying brakes until the car is stopped
       if not CS.standstill or output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= CP.stoppingBrakeRate / RATE
-      output_gb = clip(output_gb, -brake_max, 0.)
+      output_gb = clip(output_gb, -brake_max, gas_max)
 
       self.reset(CS.vEgo)
 
