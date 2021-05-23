@@ -55,11 +55,11 @@ void Sidebar::updateState(const UIState &s) {
 
   auto deviceState = sm["deviceState"].getDeviceState();
   setProperty("netType", network_type[deviceState.getNetworkType()]);
-  if(net_type == cereal::DeviceState::NetworkType::WIFI) {
+  if(netType == "WiFi") {
     std::string ip = deviceState.getWifiIpAddress();
     network_str = ip.c_str();
   } else {
-    network_str = network_type[net_type];
+    network_str = net_type;
   }
   setProperty("netStrength", signal_imgs[deviceState.getNetworkStrength()]);
 
