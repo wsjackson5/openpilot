@@ -50,6 +50,7 @@ class CAR:
   LEXUS_NX = "LEXUS NX 2018"
   LEXUS_NX_TSS2 = "LEXUS NX 2020"
   MIRAI = "TOYOTA MIRAI 2021" # TSS 2.5
+  LEXUS_UXH_TSS2 = "LEXUS UX HYBRID 2019"
 
 # addr: (ecu, cars, bus, 1/freq*100, vl)
 STATIC_MSGS = [
