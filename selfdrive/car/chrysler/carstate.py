@@ -26,7 +26,6 @@ class CarState(CarStateBase):
 
     ret.brakePressed = cp.vl["BRAKE_2"]['BRAKE_PRESSED_2'] == 5  # human-only
     ret.brake = 0
-    ret.brakeLights = ret.brakePressed
     ret.gas = cp.vl["ACCEL_GAS_134"]['ACCEL_134']
     ret.gasPressed = ret.gas > 1e-5
 
