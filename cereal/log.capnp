@@ -292,7 +292,7 @@ struct DeviceState @0xa4d8b5af2aa492eb {
 
   lastAthenaPingTime @32 :UInt64;
   wifiIpAddress @33 :Text;
-
+  
   # power
   batteryPercent @8 :Int16;
   batteryStatus @9 :Text;
@@ -1279,6 +1279,7 @@ struct Sentinel {
     startOfRoute @3;
   }
   type @0 :SentinelType;
+  signal @1 :Int32;
 }
 
 struct ManagerState {
