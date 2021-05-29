@@ -40,26 +40,26 @@ class CarInterface(CarInterfaceBase):
     if LQR_enabled:
       ret.lateralTuning.init('lqr')
       ret.lateralTuning.lqr.scale = 1965.0  #by 양민님
-      ret.lateralTuning.lqr.ki = 0.024
+      ret.lateralTuning.lqr.ki = 0.04
       ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
       ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
       ret.lateralTuning.lqr.c = [1., 0.]
-      ret.lateralTuning.lqr.k = [-110., 451.]
-      ret.lateralTuning.lqr.l = [0.33, 0.318]
-      ret.lateralTuning.lqr.dcGain = 0.00225
+      ret.lateralTuning.lqr.k = [-110.73572306, 451.22718255]
+      ret.lateralTuning.lqr.l = [0.3233671, 0.3185757]
+      ret.lateralTuning.lqr.dcGain = 0.002237852961363602
     elif not LQR_enabled and INDI_enabled:
       ret.lateralTuning.init('indi')
       ret.lateralTuning.indi.innerLoopGainBP = [10., 30.]
-      ret.lateralTuning.indi.innerLoopGainV = [5.5, 6.0]
+      ret.lateralTuning.indi.innerLoopGainV = [5.5, 8.0]
       ret.lateralTuning.indi.outerLoopGainBP = [10., 30.]
-      ret.lateralTuning.indi.outerLoopGainV = [4.5, 5.0]
+      ret.lateralTuning.indi.outerLoopGainV = [4.5, 7.0]
       ret.lateralTuning.indi.timeConstantBP = [10., 30.]
-      ret.lateralTuning.indi.timeConstantV = [1.8, 2.3]
+      ret.lateralTuning.indi.timeConstantV = [1.8, 3.5]
       ret.lateralTuning.indi.actuatorEffectivenessBP = [0.]
       ret.lateralTuning.indi.actuatorEffectivenessV = [2.0]
     elif not LQR_enabled and not INDI_enabled:
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[10., 30.0], [10., 30.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12, 0.18], [0.012, 0.016]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.12, 0.18], [0.02, 0.03]]
       ret.lateralTuning.pid.kdBP = [0.]
       ret.lateralTuning.pid.kdV = [0.]  #corolla from shane fork : 0.725
       ret.lateralTuning.pid.kf = 0.000045
