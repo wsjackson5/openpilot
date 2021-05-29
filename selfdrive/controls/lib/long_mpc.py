@@ -13,7 +13,7 @@ LOG_MPC = os.environ.get('LOG_MPC', False)
 
 STOPPING_DISTANCE = 2  # distance between you and lead car when you come to stop
 VEL = [0.0, 2.778, 5.556, 8.333, 11.111, 13.889, 16.667, 19.444, 22.222, 25.0, 27.778]  # velocities
-DIST = [2.0, 2.1, 2.2, 2.3, 2.35, 2.45, 2.6, 2.75, 2.9, 3.0, 3.1]
+DIST = [2.0, 2.1, 2.2, 2.3, 2.35, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9]
 
 class LongitudinalMpc():
   def __init__(self, mpc_id):
@@ -81,7 +81,7 @@ class LongitudinalMpc():
         v_lead = 0.0
         a_lead = 0.0
 
-      self.a_lead_tau = max(lead.aLeadTau, (a_lead ** 2 * math.pi) / (2 * (v_lead + 0.01) ** 2))
+      self.a_lead_tau = lead.aLeadTau
       self.new_lead = False
       if not self.prev_lead_status or abs(x_lead - self.prev_lead_x) > 2.5:
         self.libmpc.init_with_simulation(self.v_mpc, x_lead, v_lead, a_lead, self.a_lead_tau)
