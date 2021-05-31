@@ -70,12 +70,12 @@ class CarController():
       elif CS.adaptive_Cruise:
         zero = 0.15625  #40/256
         #regen_active = True if actuators.brake > 0.01 else False
-        accel = (1 - zero * 2) * actuators.gas + self.apply_pedal_last * (zero * 2)
+        accel = (1 - zero * 3) * actuators.gas + self.apply_pedal_last * (zero * 3)
         final_accel, self.accel_steady = accel_hysteresis(accel, self.accel_steady)
         final_pedal = clip(final_accel, 0., 1.)
         self.apply_pedal_last = final_pedal
 
-      if (frame % 2) == 0:
+      if (frame % 5) == 0:
         idx = (frame // 2) % 4
         can_sends.append(create_gas_command(self.packer_pt, final_pedal, idx))
 
