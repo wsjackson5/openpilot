@@ -91,7 +91,7 @@ class LongControl():
 
     elif CS.gasPressed:
       self.reset(v_ego_pid)
-      output_gb = max(output_gb, CS.gas)
+      output_gb = max(output_gb, CS.gas / 254.)
 
     # tracking objects and driving
     elif self.long_control_state == LongCtrlState.pid:
