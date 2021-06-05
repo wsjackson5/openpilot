@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 from selfdrive.controls.lib.drive_helpers import get_steer_max
-from common.numpy_fast import clip
+from common.numpy_fast import clip, interp
 from common.realtime import DT_CTRL
 from cereal import log
 
@@ -25,6 +25,10 @@ class LatControlLQR():
 
     self.sat_count_rate = 1.0 * DT_CTRL
     self.sat_limit = CP.steerLimitTimer
+
+    self.scale_correction = [CP.lateralTuning.lqr.scale + 300, CP.lateralTuning.lqr.scale]
+    self.ki_correction = [CP.lateralTuning.lqr.ki, CP.lateralTuning.lqr.ki + 0.015]
+    self.bp = [10., 30.]
 
     self.reset()
 
@@ -62,6 +66,10 @@ class LatControlLQR():
     angle_steers_k = float(self.C.dot(self.x_hat))
     e = steering_angle_no_offset - angle_steers_k
     self.x_hat = self.A.dot(self.x_hat) + self.B.dot(CS.steeringTorqueEps / torque_scale) + self.L.dot(e)
+
+    #scale and i gain correction to speed
+    self.scale = interp(CS.vEgo, self.bp, self.scale_correction)
+    self.ki = interp(CS.vEgo, self.bp, self.ki_correction)
 
     if CS.vEgo < 0.3 or not active or not CS.lkasEnable:
       lqr_log.active = False

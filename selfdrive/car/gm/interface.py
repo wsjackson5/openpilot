@@ -39,7 +39,7 @@ class CarInterface(CarInterfaceBase):
 
     if LQR_enabled:
       ret.lateralTuning.init('lqr')
-      ret.lateralTuning.lqr.scale = 1965.0
+      ret.lateralTuning.lqr.scale = 1950.0
       ret.lateralTuning.lqr.ki = 0.055
       ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
       ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
@@ -160,7 +160,7 @@ class CarInterface(CarInterfaceBase):
       ret.gasMaxBP = [0.0, 5.0, 9.0, 35.0]
       ret.gasMaxV =  [0.4, 0.5, 0.7, 0.7]
 
-    ret.stoppingControl = False
+    ret.stoppingControl = True
     ret.startAccel = 0.4
 
     ret.steerLimitTimer = 0.4
