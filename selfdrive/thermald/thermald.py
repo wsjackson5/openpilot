@@ -20,7 +20,7 @@ from selfdrive.hardware import EON, TICI, HARDWARE
 from selfdrive.loggerd.config import get_available_percent
 from selfdrive.pandad import get_expected_signature
 from selfdrive.swaglog import cloudlog
-from selfdrive.thermald.power_monitoring import PowerMonitoring, VBATT_PAUSE_CHARGING
+from selfdrive.thermald.power_monitoring import PowerMonitoring
 from selfdrive.version import get_git_branch, terms_version, training_version
 
 FW_SIGNATURE = get_expected_signature()
@@ -35,6 +35,7 @@ DAYS_NO_CONNECTIVITY_PROMPT = 4  # send an offroad prompt after 4 days with no i
 DISCONNECT_TIMEOUT = 5.  # wait 5 seconds before going offroad after disconnect so you get an alert
 EON_BATT_MIN_SOC = 40
 EON_BATT_MAX_SOC = 80
+EON_BATT_CHARGE_PAUSE = 11500
 
 prev_offroad_states: Dict[str, Tuple[bool, Optional[str]]] = {}
 
@@ -396,7 +397,7 @@ def thermald_thread():
         HARDWARE.set_battery_charging(True)
 
       if HARDWARE.get_battery_charging:
-        if msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or (msg.deviceState.batteryPercent > (EON_BATT_MIN_SOC + 20) and power_monitor.car_voltage_mV < VBATT_PAUSE_CHARGING * 1e3):
+        if msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or (msg.deviceState.batteryPercent > (EON_BATT_MIN_SOC + 20) and power_monitor.car_voltage_mV < EON_BATT_CHARGE_PAUSE):
           HARDWARE.set_battery_charging(False)
       else:
         if msg.deviceState.batteryPercent < EON_BATT_MIN_SOC:
