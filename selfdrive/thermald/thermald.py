@@ -174,6 +174,9 @@ def thermald_thread():
 
   thermal_config = HARDWARE.get_thermal_config()
 
+  if params.get_bool("IsOnroad"):
+    cloudlog.event("onroad flag not cleared")
+
   # CPR3 logging
   if EON:
     base_path = "/sys/kernel/debug/cpr3-regulator/"
@@ -359,6 +362,7 @@ def thermald_thread():
     # Handle offroad/onroad transition
     should_start = all(startup_conditions.values())
     if should_start != should_start_prev or (count == 0):
+      params.put_bool("IsOnroad", should_start)
       params.put_bool("IsOffroad", not should_start)
       HARDWARE.set_power_save(not should_start)
       if TICI and not params.get_bool("EnableLteOnroad"):
@@ -392,7 +396,7 @@ def thermald_thread():
         HARDWARE.set_battery_charging(True)
 
       if HARDWARE.get_battery_charging:
-        if msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or (msg.deviceState.batteryPercent > EON_BATT_MIN_SOC and power_monitor.car_voltage_mV < VBATT_PAUSE_CHARGING * 1e3):
+        if msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or (msg.deviceState.batteryPercent > (EON_BATT_MIN_SOC + 20) and power_monitor.car_voltage_mV < VBATT_PAUSE_CHARGING * 1e3):
           HARDWARE.set_battery_charging(False)
       else:
         if msg.deviceState.batteryPercent < EON_BATT_MIN_SOC:
