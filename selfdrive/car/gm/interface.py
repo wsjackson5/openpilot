@@ -151,8 +151,8 @@ class CarInterface(CarInterfaceBase):
     ret.tireStiffnessFront, ret.tireStiffnessRear = scale_tire_stiffness(ret.mass, ret.wheelbase, ret.centerToFront,
                                                                          tire_stiffness_factor=tire_stiffness_factor)
 
-    ret.longitudinalTuning.kpBP = [0.]
-    ret.longitudinalTuning.kpV = [0.4]
+    ret.longitudinalTuning.kpBP = [0., 30.]
+    ret.longitudinalTuning.kpV = [0.4, 0.45]
     ret.longitudinalTuning.kiBP = [0.]
     ret.longitudinalTuning.kiV = [0.05]
     #ret.longitudinalTuning.kfBP = [0.]
