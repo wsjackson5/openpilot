@@ -18,7 +18,10 @@ def get_startup_event(car_recognized, controller_available, fuzzy_fingerprint):
   event = EventName.startup
 
   if not car_recognized:
-    event = EventName.startupNoCar
+    if fw_seen:
+      event = EventName.startupNoCar
+    else:
+      event = EventName.startupNoFw
   elif car_recognized and not controller_available:
     event = EventName.startupNoControl
   elif car_recognized and fuzzy_fingerprint:
