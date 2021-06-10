@@ -14,7 +14,7 @@ from cereal import car
 EventName = car.CarEvent.EventName
 
 
-def get_startup_event(car_recognized, controller_available, fuzzy_fingerprint):
+def get_startup_event(car_recognized, controller_available, fuzzy_fingerprint, fw_seen):
   event = EventName.startup
 
   if not car_recognized:
