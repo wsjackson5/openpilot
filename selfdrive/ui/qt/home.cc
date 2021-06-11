@@ -72,7 +72,7 @@ void HomeWindow::mousePressEvent(QMouseEvent* e) {
 
     // TODO: Handle this without exposing pointer to map widget
     // Hide map first if visible, then hide sidebar
-    if (onroad->map != nullptr && onroad->map->isVisible()){
+    if (onroad->map != nullptr && onroad->map->isVisible()) {
       onroad->map->setVisible(false);
     } else if (!sidebar->isVisible()) {
       sidebar->setVisible(true);
@@ -175,7 +175,7 @@ void OffroadHome::refresh() {
 
   alerts_widget->refresh();
   if (!alerts_widget->alertCount && !alerts_widget->updateAvailable) {
-    emit closeAlerts();
+    closeAlerts();
     alert_notification->setVisible(false);
     return;
   }
