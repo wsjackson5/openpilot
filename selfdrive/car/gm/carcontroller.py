@@ -9,8 +9,8 @@ from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
-VEL = [13.889, 16.667]  # velocities
-MIN_PEDAL = [0., 0.05]
+VEL = [13.889, 16.667, 22.2222]  # velocities
+MIN_PEDAL = [0., 0.05, 0.07]
 
 class CarController():
   def __init__(self, dbc_name, CP, VM):
