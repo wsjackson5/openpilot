@@ -337,7 +337,7 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QFrame(parent) {
     background-color: #292929;
   )");
   close_btn->setFixedSize(200, 200);
-  sidebar_layout->addSpacing(45);
+  sidebar_layout->addSpacing(30);
   sidebar_layout->addWidget(close_btn, 0, Qt::AlignCenter);
   QObject::connect(close_btn, &QPushButton::released, this, &SettingsWindow::closeSettings);
 
