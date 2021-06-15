@@ -14,6 +14,10 @@
 #include "selfdrive/ui/paint.h"
 #include "selfdrive/ui/qt/qt_window.h"
 
+#if UI_FEATURE_DASHCAM
+#include "selfdrive/ui/dashcam.h"
+#endif
+
 #define BACKLIGHT_DT 0.25
 #define BACKLIGHT_TS 2.00
 #define BACKLIGHT_OFFROAD 75
@@ -241,6 +245,15 @@ static void update_vision(UIState *s) {
       LOGE("visionIPC receive timeout");
     }
   }
+
+#if UI_FEATURE_DASHCAM
+   if(s->awake)
+   {
+        int touch_x = -1, touch_y = -1;
+        touch_poll(&(s->touch), &touch_x, &touch_y, 0);
+        dashcam(s, touch_x, touch_y);
+   }
+#endif
 }
 
 static void update_status(UIState *s) {
@@ -307,6 +320,8 @@ QUIState::QUIState(QObject *parent) : QObject(parent) {
   timer = new QTimer(this);
   QObject::connect(timer, &QTimer::timeout, this, &QUIState::update);
   timer->start(0);
+
+  touch_init(&(ui_state.touch));
 }
 
 void QUIState::update() {
