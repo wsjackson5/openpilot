@@ -63,7 +63,8 @@ void Sidebar::updateState(const UIState &s) {
   } else {
     network_str = net_type;
   }
-  setProperty("netStrength", (int)deviceState.getNetworkStrength());
+  int strength = (int)deviceState.getNetworkStrength();
+  setProperty("netStrength", strength > 0 ? strength + 1 : 0);
 
   auto last_ping = deviceState.getLastAthenaPingTime();
   if (last_ping == 0) {
