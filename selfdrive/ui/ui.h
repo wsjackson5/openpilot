@@ -23,6 +23,9 @@
 #include "selfdrive/common/params.h"
 #include "selfdrive/common/util.h"
 #include "selfdrive/common/visionimg.h"
+#include "selfdrive/common/touch.h"
+
+#define UI_FEATURE_DASHCAM 1
 
 #define COLOR_BLACK nvgRGBA(0, 0, 0, 255)
 #define COLOR_BLACK_ALPHA(x) nvgRGBA(0, 0, 0, x)
@@ -143,6 +146,9 @@ typedef struct UIState {
   float car_space_transform[6];
   bool wide_camera;
   float zoom;
+
+  TouchState touch;
+
 } UIState;
 
 
