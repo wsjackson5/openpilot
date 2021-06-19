@@ -35,7 +35,7 @@ DAYS_NO_CONNECTIVITY_PROMPT = 4  # send an offroad prompt after 4 days with no i
 DISCONNECT_TIMEOUT = 5.  # wait 5 seconds before going offroad after disconnect so you get an alert
 EON_BATT_MIN_SOC = 40
 EON_BATT_MAX_SOC = 80
-EON_BATT_CHARGE_PAUSE = 11500
+EON_BATT_CHARGE_PAUSE = 11100
 
 prev_offroad_states: Dict[str, Tuple[bool, Optional[str]]] = {}
 
