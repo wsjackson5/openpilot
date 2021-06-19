@@ -5,8 +5,10 @@ This branch is only for GM Chevolet Bolt EV based on latest released version fro
 # Features
 
   - New panda code supports white/grey panda giraffe and comma/custom made harness for black panda
+  - Update panda and DBC for Comma Pedal
   - Toggle Switch for enabling prebuilt (thanks to 양민님)
   - Add Battery Charging Logic (thanks to 양민님)
+  - Add UI Recording (thanks to neokii)
   - Toggle Switch for selection lateral control function with LQR or INDI
   - <b>Support Comma pedal for longitudinal control but this does not gurantee fully to provide the Stop & Go </b>
     1) Only Lateral control by OP
