@@ -9,7 +9,7 @@ from opendbc.can.packer import CANPacker
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 
-VEL = [13.889, 16.667, 22.2222]  # velocities
+VEL = [15.279, 16.667, 22.2222]  # velocities
 MIN_PEDAL = [0., 0.05, 0.07]
 
 class CarController():
@@ -51,7 +51,7 @@ class CarController():
       can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, lkas_enabled))
 
     # Pedal/Regen
-    if CS.CP.enableGasInterceptor and (frame % 4) == 0:
+    if CS.CP.enableGasInterceptor and (frame % 2) == 0:
 
       if not enabled or not CS.adaptive_Cruise:
         final_pedal = 0
@@ -63,12 +63,12 @@ class CarController():
         if Delta > 0:
           pedal = 0.6 * actuators.gas + self.apply_pedal_last * 0.4
         else:
-          pedal = self.apply_pedal_last + Delta / 10.
+          pedal = self.apply_pedal_last + Delta / 20.
 
         final_pedal = clip(pedal, min_pedal_speed, 1.)
        
       self.apply_pedal_last = final_pedal
-      idx = (frame // 4) % 4
+      idx = (frame // 2) % 4
       can_sends.append(create_gas_command(self.packer_pt, final_pedal, idx))
 
     # Send dashboard UI commands (ACC status), 25hz
