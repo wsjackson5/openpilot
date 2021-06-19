@@ -51,7 +51,7 @@ class CarController():
       can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, lkas_enabled))
 
     # Pedal/Regen
-    if CS.CP.enableGasInterceptor and (frame % 4) == 0:
+    if CS.CP.enableGasInterceptor and (frame % 3) == 0:
 
       if not enabled or not CS.adaptive_Cruise:
         final_pedal = 0
@@ -66,9 +66,9 @@ class CarController():
           pedal = self.apply_pedal_last + Delta / 10.
 
         final_pedal = clip(pedal, min_pedal_speed, 1.)
-       
+
       self.apply_pedal_last = final_pedal
-      idx = (frame // 4) % 4
+      idx = (frame // 3) % 4
       can_sends.append(create_gas_command(self.packer_pt, final_pedal, idx))
 
     # Send dashboard UI commands (ACC status), 25hz
