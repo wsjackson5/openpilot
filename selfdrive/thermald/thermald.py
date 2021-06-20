@@ -394,14 +394,11 @@ def thermald_thread():
     # 양민님 충전로직
     if EON:
       if power_monitor.car_voltage_mV is None or msg.deviceState.batteryPercent is None :
+        HARDWARE.set_battery_charging(False)
+      elif HARDWARE.get_battery_charging and (msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or power_monitor.car_voltage_mV < EON_BATT_CHARGE_PAUSE and not should_start):
+        HARDWARE.set_battery_charging(False)
+      elif not HARDWARE.get_battery_charging and (msg.deviceState.batteryPercent < EON_BATT_MIN_SOC and power_monitor.car_voltage_mV > EON_BATT_CHARGE_PAUSE):
         HARDWARE.set_battery_charging(True)
-
-      if HARDWARE.get_battery_charging:
-        if msg.deviceState.batteryPercent > EON_BATT_MAX_SOC or (msg.deviceState.batteryPercent > (EON_BATT_MIN_SOC + 20) and power_monitor.car_voltage_mV < EON_BATT_CHARGE_PAUSE):
-          HARDWARE.set_battery_charging(False)
-      else:
-        if msg.deviceState.batteryPercent < EON_BATT_MIN_SOC:
-          HARDWARE.set_battery_charging(True)
 
     # Check if we need to shut down
     if power_monitor.should_shutdown(pandaState, off_ts, started_seen):
