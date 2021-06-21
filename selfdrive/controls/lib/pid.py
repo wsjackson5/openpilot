@@ -104,10 +104,10 @@ class LatPIDController():
     return self.control
 
 class LongPIController():
-  def __init__(self, k_p, k_i, k_f=1., pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None):
+  def __init__(self, k_p, k_i, k_f=None, pos_limit=None, neg_limit=None, rate=100, sat_limit=0.8, convert=None):
     self._k_p = k_p  # proportional gain
     self._k_i = k_i  # integral gain
-    self.k_f = k_f  # feedforward gain
+    self._k_f = k_f  # feedforward gain
 
     self.pos_limit = pos_limit
     self.neg_limit = neg_limit
@@ -127,6 +127,10 @@ class LongPIController():
   @property
   def k_i(self):
     return interp(self.speed, self._k_i[0], self._k_i[1])
+
+  @property
+  def k_f(self):
+    return interp(self.speed, self._k_f[0], self._k_f[1])
 
   def _check_saturation(self, control, check_saturation, error):
     saturated = (control < self.neg_limit) or (control > self.pos_limit)
