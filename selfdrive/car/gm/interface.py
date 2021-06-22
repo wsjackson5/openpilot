@@ -59,10 +59,10 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.indi.actuatorEffectivenessV = [2.0]
     elif not LQR_enabled and not INDI_enabled:
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[10., 25.0], [10., 25.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1, 0.12], [0.006, 0.012]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.1, 0.12], [0.00624, 0.01248]]
       ret.lateralTuning.pid.kdBP = [0.]
-      ret.lateralTuning.pid.kdV = [0.3]  #corolla from shane fork : 0.725
-      ret.lateralTuning.pid.kf = 0.0007
+      ret.lateralTuning.pid.kdV = [0.7]  #corolla from shane fork : 0.725
+      ret.lateralTuning.pid.kf = 0.00055
 
     ret.steerRateCost = 1.0
     ret.steerActuatorDelay = 0.12  # Default delay, not measured yet
@@ -85,7 +85,7 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 1625. + STD_CARGO_KG
       ret.safetyModel = car.CarParams.SafetyModel.gm
       ret.wheelbase = 2.60096
-      ret.steerRatio = 15.2
+      ret.steerRatio = 16.8
       ret.steerRatioRear = 0.
       ret.centerToFront = ret.wheelbase * 0.49
       tire_stiffness_factor = 0.5
@@ -209,8 +209,8 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.belowEngageSpeed)
     if self.CS.park_brake:
       events.add(EventName.parkBrake)
-    if ret.vEgo < self.CP.minSteerSpeed:
-      events.add(car.CarEvent.EventName.belowSteerSpeed)
+    #if ret.vEgo < self.CP.minSteerSpeed:
+      #events.add(car.CarEvent.EventName.belowSteerSpeed)
     if self.CP.enableGasInterceptor:
       if self.CS.adaptive_Cruise and ret.brakePressed:
         events.add(EventName.pedalPressed)
