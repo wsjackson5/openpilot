@@ -63,9 +63,9 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.132], [0.01045]]
       ret.lateralTuning.pid.kdBP = [0.]
       ret.lateralTuning.pid.kdV = [0.3]  #corolla from shane fork : 0.725
-      ret.lateralTuning.pid.kf = 0.00005
+      ret.lateralTuning.pid.kf = 0.000062
 
-    ret.steerRateCost = 1.0
+    ret.steerRateCost = 0.45
     ret.steerActuatorDelay = 0.12  # Default delay, not measured yet
 
     if candidate == CAR.VOLT:
