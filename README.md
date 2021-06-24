@@ -8,7 +8,8 @@ This branch is only for GM Chevolet Bolt EV based on latest released version fro
   - Update panda and DBC for Comma Pedal
   - Toggle Switch for enabling prebuilt (thanks to 양민님)
   - Add Battery Charging Logic (thanks to 양민님)
-  - Add UI Recording (thanks to neokii)
+  - Add UI Recording (thanks to neokii님)
+  - Add auto shut down from dragonpilot
   - Toggle Switch for selection lateral control function with LQR or INDI
   - <b>Support Comma pedal for longitudinal control but this does not gurantee fully to provide the Stop & Go </b>
     1) Only Lateral control by OP
