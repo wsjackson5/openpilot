@@ -62,7 +62,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.149], [0.013]]
       ret.lateralTuning.pid.kdBP = [0.]
-      ret.lateralTuning.pid.kdV = [0.]  #corolla from shane fork : 0.725
+      ret.lateralTuning.pid.kdV = [0.5]  #corolla from shane fork : 0.725
       ret.lateralTuning.pid.kf = 0.000062
 
     ret.steerRateCost = 0.4
